@@ -1,0 +1,4 @@
+config:
+	service_account:
+		display_name: Google Service Account
+		description: "Path to the JSON service account file belonging to the project through which Google Play Console will send payment notifications <i>(eg. <code>/data/web/example/credentials.json</code>)</i>."

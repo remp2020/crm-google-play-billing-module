@@ -1,0 +1,19 @@
+services:
+	moduleManager:
+		setup:
+			- addModule(Crm\GooglePlayBillingModule\GooglePlayBillingModule())
+
+	gatewayFactory:
+		setup:
+			- registerGateway(@Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling::GATEWAY_CODE, Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling)
+
+	subscriptionResponseProcessor: Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessor
+
+	- Crm\GooglePlayBillingModule\Api\DeveloperNotificationPushWebhookApiHandler
+	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
+	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)
+	- Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory
+	- Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository
+	- Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository
+	- Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder
+	- Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder

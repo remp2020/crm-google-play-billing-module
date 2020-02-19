@@ -1,0 +1,4 @@
+config:
+	service_account:
+		display_name: Google Service Account
+		description: "Cesta k service account JSON souboru patřícímu projektu, přes který má Google Play konzola posílat oznámení o platbách <i>(např. <code>/data/web/example/credentials.json</code>)</i>."

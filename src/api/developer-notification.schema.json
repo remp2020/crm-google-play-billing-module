@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "description": "Google Play Billing DeveloperNotification",
+  "type": "object",
+  "required": ["version", "packageName"],
+  "oneOf": [
+    {
+      "required": [
+        "oneTimeProductNotification"
+      ]
+    },
+    {
+      "required": [
+        "subscriptionNotification"
+      ]
+    },
+    {
+      "required": [
+        "testNotification"
+      ]
+    }
+  ],
+  "properties": {
+    "version": {
+      "type": "string"
+    },
+    "packageName": {
+      "type": "string"
+    },
+    "eventTimeMillis": {
+      "type": "string"
+    },
+    "oneTimeProductNotification": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "notificationType": {
+          "type": "integer"
+        },
+        "purchaseToken": {
+          "type": "string"
+        },
+        "sku": {
+          "type": "string"
+        }
+      }
+    },
+    "subscriptionNotification": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        },
+        "notificationType": {
+          "type": "integer"
+        },
+        "purchaseToken": {
+          "type": "string"
+        },
+        "subscriptionId": {
+          "type": "string"
+        }
+      }
+    },
+    "testNotification": {
+      "type": "object",
+      "properties": {
+        "version": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
