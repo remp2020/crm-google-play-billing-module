@@ -165,7 +165,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         return $developerNotification;
     }
 
-    private function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow
+    public function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow
     {
         $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
         if (!$user) {
@@ -201,7 +201,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         ];
 
         if ($subscriptionResponse->getPaymentState() === GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL) {
-            return $this->createFreeSubscription($user, $subscriptionType, $subscriptionStartAt, $subscriptionEndAt, $metas);
+            return $this->createGoogleFreeTrialSubscription($user, $subscriptionType, $subscriptionStartAt, $subscriptionEndAt, $metas);
         }
 
         if ($subscriptionResponse->getPaymentState() !== GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED) {
@@ -260,7 +260,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         return ($payment ?? null);
     }
 
-    private function createFreeSubscription(
+    public function createGoogleFreeTrialSubscription(
         ActiveRow $user,
         ActiveRow $subscriptionType,
         DateTime $startDateTime,
