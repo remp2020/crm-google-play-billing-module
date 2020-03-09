@@ -224,11 +224,11 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         if ($paymentWithPurchaseToken && isset($paymentWithPurchaseToken->subscription_end_at)) {
             // check if same payment wasn't created already by legacy API endpoint `verify-purchase`
-            if ($paymentWithPurchaseToken->subscription_end_at === $subscriptionEndAt) {
+            if ($paymentWithPurchaseToken->subscription_end_at->format('Y-m-d H:i:s') === $subscriptionEndAt->format('Y-m-d H:i:s')) {
                 throw new DoNotRetryException("Payment with same purchase token and end datetime already exists.");
             }
 
-            if ($paymentWithPurchaseToken->subscription_end_at > $subscriptionEndAt) {
+            if ($paymentWithPurchaseToken->subscription_end_at->format('Y-m-d H:i:s') > $subscriptionEndAt->format('Y-m-d H:i:s')) {
                 throw new DoNotRetryException("Future payment with same purchase token already exists.");
             }
 
