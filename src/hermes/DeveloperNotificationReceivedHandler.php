@@ -270,6 +270,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         $subscription = $this->subscriptionsRepository->add(
             $subscriptionType,
             false,
+            false,
             $user,
             SubscriptionsRepository::TYPE_FREE,
             $startDateTime,
