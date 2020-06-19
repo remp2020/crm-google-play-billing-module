@@ -26,8 +26,8 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
     {
         if (!empty($subscriptionResponse->getDeveloperPayload())) {
             $developerPayload = json_decode($subscriptionResponse->getDeveloperPayload());
-            if (isset($developerPayload['user_id'])) {
-                $user = $this->usersRepository->find($developerPayload['user_id']);
+            if (isset($developerPayload->user_id)) {
+                $user = $this->usersRepository->find($developerPayload->user_id);
                 if ($user !== false) {
                     return $user;
                 }
