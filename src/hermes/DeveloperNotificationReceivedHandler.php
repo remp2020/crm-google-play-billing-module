@@ -18,6 +18,7 @@ use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 use Psr\Log\LoggerAwareTrait;
+use ReceiptValidator\GooglePlay\Acknowledger;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
 use Tomaj\Hermes\Handler\HandlerInterface;
 use Tomaj\Hermes\Handler\RetryTrait;
@@ -100,6 +101,17 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED:
                 try {
                     $this->createPayment($gSubscription, $developerNotification, $user);
+
+                    // payment is created internally; we can confirm it in Google
+                    if (!$gSubscription->isAcknowledged()) {
+                        $googleAcknowledger = new Acknowledger(
+                            $googlePlayValidator->getPublisherService(),
+                            $developerNotification->package_name,
+                            $developerNotification->subscription_id,
+                            $developerNotification->purchase_token
+                        );
+                        $googleAcknowledger->acknowledge();
+                    }
                 } catch (DoNotRetryException $e) {
                     Debugger::log("Unable to create payment. Error: [{$e->getMessage()}]", Debugger::ERROR);
                     $this->developerNotificationsRepository->updateStatus(
