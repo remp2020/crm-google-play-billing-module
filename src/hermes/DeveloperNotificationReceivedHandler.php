@@ -10,6 +10,7 @@ use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
+use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
@@ -40,6 +41,8 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
     private $paymentGatewaysRepository;
 
+    private $paymentMetaRepository;
+
     private $paymentsRepository;
 
     private $recurrentPaymentsRepository;
@@ -56,6 +59,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
         GooglePlayValidatorFactory $googlePlayValidator,
         PaymentGatewaysRepository $paymentGatewaysRepository,
+        PaymentMetaRepository $paymentMetaRepository,
         PaymentsRepository $paymentsRepository,
         RecurrentPaymentsRepository $recurrentPaymentsRepository,
         SubscriptionsRepository $subscriptionsRepository,
@@ -65,6 +69,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         $this->googlePlaySubscriptionTypesRepository = $googlePlaySubscriptionTypesRepository;
         $this->googlePlayValidatorFactory = $googlePlayValidator;
         $this->paymentGatewaysRepository = $paymentGatewaysRepository;
+        $this->paymentMetaRepository = $paymentMetaRepository;
         $this->paymentsRepository = $paymentsRepository;
         $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->subscriptionsRepository = $subscriptionsRepository;
@@ -118,8 +123,22 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 break;
 
             // following notification types do not affect existing subscriptions or payments
-            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED:
+                break;
+
+            // handle cancelled and revoked subscriptions
+            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED:
+            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED:
+                try {
+                    $this->cancelSubscription($gSubscription, $developerNotification);
+                } catch (DoNotRetryException $e) {
+                    Debugger::log("Unable to cancel subscription. DeveloperNotification ID: [{$developerNotification->id}]. Error: [{$e->getMessage()}]", Debugger::ERROR);
+                    $this->developerNotificationsRepository->updateStatus(
+                        $developerNotification,
+                        DeveloperNotificationsRepository::STATUS_ERROR
+                    );
+                    return false;
+                }
                 break;
 
             // doesn't affect existing payments; new will be created with confirmed price
@@ -134,7 +153,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_DEFERRED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED:
-            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED:
                 break;
 
             default:
@@ -262,6 +280,69 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         return ($payment ?? null);
     }
 
+    /**
+     * cancelSubscriptions processes cancellation and refund
+     *
+     * - updates subscription's end date
+     *   - From Google docs: If expiryTimeMillis is in the past, then the user loses entitlement immediately.
+     *     Otherwise, the user should retain entitlement until it is expired.
+     * - adds note about cancellation
+     * - stores cancellation reason into payment_meta
+     * - changes internal payment's status to REFUND in case of REVOKED notification type
+     *   - no status change in case of CANCELLATION (money are not returned to customer)
+     */
+    public function cancelSubscription(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification)
+    {
+        $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
+        $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($subscriptionResponse);
+
+        // check if any payment with same purchase token was created & load data from it
+        $paymentWithPurchaseToken = $this->paymentsRepository->getTable()
+            ->where([
+                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+                ':payment_meta.value' => $developerNotification->purchase_token,
+                'subscription_start_at >= ?' => $subscriptionStartAt->format('Y-m-d H:i:s'),
+            ])
+            ->order('payments.subscription_end_at DESC')
+            ->fetch();
+
+        if (!$paymentWithPurchaseToken) {
+            throw new DoNotRetryException("Unable to find payment with purchase token [{$developerNotification->purchase_token}] and start date [{$subscriptionStartAt->format('Y-m-d H:i:s')}].");
+        }
+
+        // store cancel reason
+        $cancelReason = $this->processCancelReason($subscriptionResponse, $developerNotification);
+        foreach ($cancelReason as $key => $value) {
+            $this->paymentMetaRepository->add($paymentWithPurchaseToken, $key, $value, true);
+        }
+
+        $cancelNote = "Subscription cancelled. Reason: " . ($cancelReason['cancel_reason'] ?? 'unknown');
+        $paymentNote = !empty($paymentWithPurchaseToken->note) ? $paymentWithPurchaseToken->note . " | " : "";
+        $this->paymentsRepository->update(
+            $paymentWithPurchaseToken,
+            [
+                'note' => $paymentNote . $cancelNote,
+            ]
+        );
+        // if subscription is revoked, money are returned and subscription is stopped (in case of cancellation, money are not returned)
+        if ($developerNotification->notification_type === DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED) {
+            $this->paymentsRepository->updateStatus($paymentWithPurchaseToken, PaymentsRepository::STATUS_REFUND);
+        }
+
+        if (!$paymentWithPurchaseToken->subscription) {
+            Debugger::log("Missing subscription which should be cancelled. DeveloperNotification ID: [{$developerNotification->id}].", Debugger::ERROR);
+            return;
+        }
+        $subscriptionNote = !empty($paymentWithPurchaseToken->subscription->note) ? $paymentWithPurchaseToken->subscription->note . " | " : "";
+        $this->subscriptionsRepository->update(
+            $paymentWithPurchaseToken->subscription,
+            [
+                'note' => $subscriptionNote . $cancelNote,
+                'end_time' => $subscriptionEndAt, // update end date of subscription with information from google
+            ]
+        );
+    }
+
     public function createGoogleFreeTrialSubscription(
         ActiveRow $user,
         ActiveRow $subscriptionType,
@@ -297,5 +378,62 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             throw new \Exception("Unable to find SubscriptionType with code [{$developerNotification->subscription_id}] provided by DeveloperNotification.");
         }
         return $googlePlaySubscriptionType->subscription_type;
+    }
+
+    /**
+     * Process cancel reason result and return array with user understandable data.
+     *
+     * @return array Returns array with named keys. Format:
+     * [
+     *    'cancel_reason' => string {cancelled_by_user|cancelled_by_system|replaced_by_new_subscription|cancelled_by_developer},
+     *    'cancel_survey_reason' => string (set only if 'cancel_reason' === 'cancelled_by_user') {other|dont_use_enough|technical_issues|cost_related_issues|found_better_app}
+     *    'cancel_survey_user_input' => string (set only if 'cancel_survey_reason' === 'other')
+     * ]
+     */
+    public function processCancelReason(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): array
+    {
+        $cancelData = [];
+        $cancelData['cancel_datetime'] = $this->subscriptionResponseProcessor->getUserCancellationTime($subscriptionResponse)->format('Y-m-d H:i:s');
+        switch ($subscriptionResponse->getCancelReason()) {
+            case 0:
+                $cancelData['cancel_reason'] = 'cancelled_by_user';
+                $cancelSurveyResult = $subscriptionResponse->getRawResponse()->getCancelSurveyResult();
+                if ($cancelSurveyResult->getCancelSurveyReason()) {
+                    switch ($cancelSurveyResult->getCancelSurveyReason()) {
+                        case 0:
+                            $cancelData['cancel_survey_reason'] = 'other';
+                            $cancelData['cancel_survey_user_input'] = $cancelSurveyResult->getUserInputCancelReason();
+                            break;
+                        case 1:
+                            $cancelData['cancel_survey_reason'] = 'dont_use_enough';
+                            break;
+                        case 2:
+                            $cancelData['cancel_survey_reason'] = 'technical_issues';
+                            break;
+                        case 3:
+                            $cancelData['cancel_survey_reason'] = 'cost_related_issues';
+                            break;
+                        case 4:
+                            $cancelData['cancel_survey_reason'] = 'found_better_app';
+                            break;
+                        default:
+                            Debugger::log("Unknown cancel survey reason {$cancelSurveyResult->getCancelSurveyReason()}. Google added new state? DeveloperNotification ID: [{$developerNotification->id}]", Debugger::ERROR);
+                    }
+                }
+                break;
+            case 1:
+                $cancelData['cancel_reason'] = 'cancelled_by_system';
+                break;
+            case 2:
+                $cancelData['cancel_reason'] = 'replaced_by_new_subscription';
+                break;
+            case 3:
+                $cancelData['cancel_reason'] = 'cancelled_by_developer';
+                break;
+            default:
+                Debugger::log("Unknown cancel reason {$subscriptionResponse->getCancelReason()}. Google added new state? DeveloperNotification ID: [{$developerNotification->id}]", Debugger::ERROR);
+        }
+
+        return $cancelData;
     }
 }
