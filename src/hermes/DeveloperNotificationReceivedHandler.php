@@ -93,7 +93,17 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             'subscription_purchase' => $gSubscription->getRawResponse()
         ]);
 
-        $user = $this->getUser($gSubscription, $developerNotification);
+        try {
+            $user = $this->subscriptionResponseProcessor->getUser($gSubscription, $developerNotification);
+        } catch (DoNotRetryException $e) {
+            // log and do not retry
+            Debugger::log("Unable to load user from DeveloperNotification. Processing stopped. Error: [{$e->getMessage()}]", Debugger::INFO);
+            $this->developerNotificationsRepository->updateStatus(
+                $developerNotification,
+                DeveloperNotificationsRepository::STATUS_ERROR
+            );
+            return false;
+        }
 
         switch ($developerNotification->notification_type) {
             // following notification types will create payment with subscription
@@ -175,18 +185,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         }
 
         return $developerNotification;
-    }
-
-    public function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow
-    {
-        $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
-        if (!$user) {
-            throw new \Exception(
-                "Unable to load user from SubscriptionResponse for DeveloperNotification ID [$developerNotification->id]." .
-                "Check `SubscriptionResponseProcessorInterface::getUser()` and it's implementations."
-            );
-        }
-        return $user;
     }
 
     private function createPayment(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification, ActiveRow $user): ?ActiveRow

@@ -2,6 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Model;
 
+use Crm\GooglePlayBillingModule\Hermes\DoNotRetryException;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
@@ -15,9 +16,12 @@ interface SubscriptionResponseProcessorInterface
      * User ID can be provided as field of DeveloperPayload in SubscriptionResponse,
      * or it can be external id which can be mapped to CRM user via user_meta.
      *
-     * @return ActiveRow|null User or null if no user found.
+     * @throws \Exception - Thrown in case user was not found.
+     * @throws DoNotRetryException - Thrown in case user was not found but we don't want to retry processing.
+     *
+     * @return ActiveRow User
      */
-    public function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ?ActiveRow;
+    public function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow;
 
     /**
      * getSubscriptionStartAt returns subscription's start DateTime from Google's SubscriptionResponse.

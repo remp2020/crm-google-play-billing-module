@@ -22,7 +22,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
      *
      * @inheritDoc
      */
-    public function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ?ActiveRow
+    public function getUser(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow
     {
         if (!empty($subscriptionResponse->getDeveloperPayload())) {
             $developerPayload = json_decode($subscriptionResponse->getDeveloperPayload());
@@ -33,6 +33,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
                 }
             }
         }
-        return null;
+
+        throw new \Exception('Unable to load user from provided developer notification');
     }
 }
