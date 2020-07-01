@@ -30,6 +30,8 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
     use LoggerAwareTrait;
     use RetryTrait;
 
+    public const INFO_LOG_LEVEL = 'google_developer_notifications';
+
     private $developerNotificationsRepository;
 
     private $googlePlaySubscriptionTypesRepository;
@@ -88,29 +90,12 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             ->setProductId($developerNotification->subscription_id)
             ->validateSubscription();
 
-        $this->logger->debug('RAW response from Google PurchasesSubscriptions.get:', [
-            'developer_notification_id' => $developerNotification->id,
-            'subscription_purchase' => $gSubscription->getRawResponse()
-        ]);
-
-        try {
-            $user = $this->subscriptionResponseProcessor->getUser($gSubscription, $developerNotification);
-        } catch (DoNotRetryException $e) {
-            // log and do not retry
-            Debugger::log("Unable to load user from DeveloperNotification. Processing stopped. Error: [{$e->getMessage()}]", Debugger::INFO);
-            $this->developerNotificationsRepository->updateStatus(
-                $developerNotification,
-                DeveloperNotificationsRepository::STATUS_ERROR
-            );
-            return false;
-        }
-
         switch ($developerNotification->notification_type) {
             // following notification types will create payment with subscription
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED:
                 try {
-                    $this->createPayment($gSubscription, $developerNotification, $user);
+                    $this->createPayment($gSubscription, $developerNotification);
 
                     // payment is created internally; we can confirm it in Google
                     if (!$gSubscription->isAcknowledged()) {
@@ -123,10 +108,10 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                         $googleAcknowledger->acknowledge();
                     }
                 } catch (DoNotRetryException $e) {
-                    Debugger::log("Unable to create payment. Error: [{$e->getMessage()}]", Debugger::ERROR);
+                    Debugger::log("Processing stopped, no further attempts. Reason: [{$e->getMessage()}]", self::INFO_LOG_LEVEL);
                     $this->developerNotificationsRepository->updateStatus(
                         $developerNotification,
-                        DeveloperNotificationsRepository::STATUS_ERROR
+                        DeveloperNotificationsRepository::STATUS_DO_NOT_RETRY
                     );
                     return false;
                 }
@@ -187,10 +172,21 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         return $developerNotification;
     }
 
-    private function createPayment(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification, ActiveRow $user): ?ActiveRow
+    /**
+     * @return ActiveRow|null - Returns $payment if created.
+     *
+     * @throws \Exception - Thrown in case of internal failure or missing settings.
+     * @throws DoNotRetryException - Thrown in case processing should be stopped without trying again.
+     */
+    private function createPayment(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ?ActiveRow
     {
-        if ($subscriptionResponse->getPaymentState() === GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_PENDING) {
-            throw new DoNotRetryException("PaymentState is [pending]. No payment or subscription were created.");
+        $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
+
+        if (!in_array($subscriptionResponse->getPaymentState(), [
+            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
+            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
+        ])) {
+            throw new DoNotRetryException("Unable to handle PaymentState [{$subscriptionResponse->getPaymentState()}], no payment created.");
         }
 
         $subscriptionType = $this->getSubscriptionType($developerNotification);
@@ -212,10 +208,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         if ($subscriptionResponse->getPaymentState() === GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL) {
             return $this->createGoogleFreeTrialSubscription($user, $subscriptionType, $subscriptionStartAt, $subscriptionEndAt, $metas);
-        }
-
-        if ($subscriptionResponse->getPaymentState() !== GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED) {
-            throw new DoNotRetryException("Unable to handle PaymentState [{$subscriptionResponse->getPaymentState()}], no payment created.");
         }
 
         $amount = ($subscriptionResponse->getPriceAmountMicros() / 1000000);

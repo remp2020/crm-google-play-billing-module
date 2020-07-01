@@ -20,6 +20,7 @@ class DeveloperNotificationsRepository extends Repository
     const STATUS_NEW = 'new';
     const STATUS_PROCESSED = 'processed';
     const STATUS_ERROR = 'error';
+    const STATUS_DO_NOT_RETRY = 'do_not_retry';
 
     const STATUSES = [
         self::STATUS_NEW,
