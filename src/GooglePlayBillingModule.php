@@ -11,6 +11,7 @@ use Tomaj\Hermes\Dispatcher;
 
 class GooglePlayBillingModule extends CrmModule
 {
+    const META_KEY_OBFUSCATED_ACCOUNT_ID = 'google_play_billing_obfuscated_account_id';
     const META_KEY_PURCHASE_TOKEN = 'google_play_billing_purchase_token';
     const META_KEY_ORDER_ID = 'google_play_billing_order_id';
     const META_KEY_DEVELOPER_NOTIFICATION_ID = 'google_play_billing_developer_notification_id';

@@ -49,9 +49,11 @@ We'll be adding administration interface later. For now it's needed to seed thes
 
 ## Matching payments with CRM users
 
-GooglePlay's in-app subscription is mapped to CRM users via `user_id` field provided within `DeveloperPayload` of `SubscriptionResponse`.
+GooglePlay's in-app subscription is mapped to CRM users via `obfuscatedExternalAccountId` field of `SubscriptionResponse`. This field is present in [Google Play Billing library v2.2](https://developer.android.com/google/play/billing/release-notes#2-2).
 
-This can be overrided by implementing `SubscriptionResponseProcessorInterface` and initializing own implementation as `subscriptionResponseProcessor` in config:
+For previous version (<2.2) of Google Play Billing library, you have to set field `obfuscatedExternalAccountId` into [DeveloperPayload](https://developer.android.com/google/play/billing/developer-payload). _This is deprecated and will be removed after official `SubscriptionResponse` in Google's package `google/apiclient-services` is updated and response contains `getObfuscatedExternalAccountId()` method._
+
+In case you need to link CRM user with app user in different way, you can override it by implementing `SubscriptionResponseProcessorInterface` and initializing own implementation as `subscriptionResponseProcessor` in config:
 
 ```neon
 subscriptionResponseProcessor: Crm\FooModule\GoogleBillingSubscriptionResponse\MyFooBarSubscriptionResponseProcessor
@@ -59,6 +61,7 @@ subscriptionResponseProcessor: Crm\FooModule\GoogleBillingSubscriptionResponse\M
 
 ## Support
 
+- Google Play Developer API version 3 is supported.
 - Only version 1.0 of DeveloperNotification is supported.
 - Only version 1.0 of SubscriptionNotification is supported.
 - One-time products are not supported.
