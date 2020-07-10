@@ -40,8 +40,10 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
         $accountID = null;
         if (method_exists($subscriptionResponse, 'getObfuscatedExternalAccountId')) {
             $accountID = $subscriptionResponse->getObfuscatedExternalAccountId() ?? null;
+        } elseif (isset($subscriptionResponse->getRawResponse()['modelData']['obfuscatedExternalAccountId'])) {
+            $accountID = $subscriptionResponse->getRawResponse()['modelData']['obfuscatedExternalAccountId'];
         } else {
-            Debugger::log('Missing `getObfuscatedExternalAccountId`. You should switch to version 3 of Google Play Billing library. Trying to find `obfuscatedExternalAccountId` in deprecated DeveloperPayload.', Debugger::WARNING);
+            Debugger::log('Missing `getObfuscatedExternalAccountId`. You should switch to version 2.2+ of Google Play Billing library. Trying to find `obfuscatedExternalAccountId` in deprecated DeveloperPayload.', Debugger::WARNING);
             if (method_exists($subscriptionResponse, 'getDeveloperPayload')) {
                 if (!empty($subscriptionResponse->getDeveloperPayload())) {
                     $developerPayload = Json::decode($subscriptionResponse->getDeveloperPayload());
