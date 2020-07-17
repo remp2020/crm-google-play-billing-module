@@ -1,6 +1,12 @@
 # Google Play Billing Module
 
-## Installation
+---
+
+_**WARNING: This is experimental WIP module. We do not recommend using this module in production.**_
+
+---
+
+## Installation
 
 We recommend using Composer for installation and update management. To add CRM GooglePlay Billing extension to your [REMP CRM](https://github.com/remp2020/crm-skeleton/) application use following command:
 
