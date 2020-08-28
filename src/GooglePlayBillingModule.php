@@ -16,6 +16,8 @@ class GooglePlayBillingModule extends CrmModule
     const META_KEY_ORDER_ID = 'google_play_billing_order_id';
     const META_KEY_DEVELOPER_NOTIFICATION_ID = 'google_play_billing_developer_notification_id';
 
+    public const USER_SOURCE_APP = 'android-app';
+
     public function registerApiCalls(ApiRoutersContainerInterface $apiRoutersContainer)
     {
         $apiRoutersContainer->attachRouter(

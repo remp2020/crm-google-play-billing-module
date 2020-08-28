@@ -59,6 +59,8 @@ GooglePlay's in-app subscription is mapped to CRM users via `obfuscatedExternalA
 
 For previous version (<2.2) of Google Play Billing library, you have to set field `obfuscatedExternalAccountId` into [DeveloperPayload](https://developer.android.com/google/play/billing/developer-payload). _This is deprecated and will be removed after official `SubscriptionResponse` in Google's package `google/apiclient-services` is updated and response contains `getObfuscatedExternalAccountId()` method._
 
+If user cannot be matched, processor creates anonymous unclaimed user _(user with `user_meta` flag `UnclaimedUser::META_KEY` set to true)_. This is needed to fulfill Google's rules - user registration cannot be prerequisite of Android in-app purchases.
+
 In case you need to link CRM user with app user in different way, you can override it by implementing `SubscriptionResponseProcessorInterface` and initializing own implementation as `subscriptionResponseProcessor` in config:
 
 ```neon

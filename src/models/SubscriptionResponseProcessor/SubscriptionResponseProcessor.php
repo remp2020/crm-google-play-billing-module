@@ -5,6 +5,7 @@ namespace Crm\GooglePlayBillingModule\Model;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
+use Crm\UsersModule\User\UnclaimedUser;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
@@ -14,14 +15,18 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
 {
     use SubscriptionResponseDateTimesTrait;
 
+    private $unclaimedUser;
+
     private $userMetaRepository;
 
     private $usersRepository;
 
     public function __construct(
+        UnclaimedUser $unclaimedUser,
         UserMetaRepository $userMetaRepository,
         UsersRepository $usersRepository
     ) {
+        $this->unclaimedUser = $unclaimedUser;
         $this->userMetaRepository = $userMetaRepository;
         $this->usersRepository = $usersRepository;
     }
@@ -32,6 +37,9 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
      * Search for a user using `obfuscatedExternalAccountId` via:
      * - `SubscriptionResponse::getObfuscatedExternalAccountId()` (Google Play Billing, version >=2.2),
      * - field `obfuscatedExternalAccountId` in `SubscriptionResponse::getDeveloperPayload()` (Google Play Billing, version <2.2).
+     *
+     * If no user was found, anonymous unclaimed user is created
+     * and used to process Android's in-app purchases without registered user.
      *
      * @throws \Exception - If no user was found or multiple users have same purchase token.
      */
@@ -68,6 +76,13 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
             return reset($usersWithAccountID)->user;
         }
 
-        throw new \Exception('No user is linked to obfuscatedExternalAccountId provided by developer notification.');
+        // no user found; create anonymous unclaimed user (Android in-app purchases have to be possible without account in CRM)
+        $user = $this->unclaimedUser->createUnclaimedUser($accountID, GooglePlayBillingModule::USER_SOURCE_APP);
+        $this->userMetaRepository->add(
+            $user,
+            GooglePlayBillingModule::META_KEY_OBFUSCATED_ACCOUNT_ID,
+            $accountID
+        );
+        return $user;
     }
 }
