@@ -1,0 +1,39 @@
+{
+    "$id": "https://example.com/post.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "description": "Google VerifyPurchase resource used to verify Android purchases",
+    "type": "object",
+    "required": ["purchaseSubscriptions"],
+    "properties": {
+        "purchaseSubscriptions": {
+            "type": "array",
+            "description": "Array of Google Play's purchases.subscriptions.",
+            "items": {
+                "$ref": "#/definitions/purchaseSubscription"
+            }
+        },
+        "articleId": {
+            "type": "string"
+        }
+    },
+    "definitions": {
+        "purchaseSubscription": {
+            "type": "object",
+            "description": "Minimal version of Google Play purchase.subscription required for validation",
+            "properties": {
+                "orderId": {
+                    "type": "string"
+                },
+                "packageName": {
+                    "type": "string"
+                },
+                "productId": {
+                    "type": "string"
+                },
+                "purchaseToken": {
+                    "type": "string"
+                }
+            }
+        }
+    }
+}

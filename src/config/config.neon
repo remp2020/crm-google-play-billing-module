@@ -10,6 +10,7 @@ services:
 	subscriptionResponseProcessor: Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessor
 
 	- Crm\GooglePlayBillingModule\Api\DeveloperNotificationPushWebhookApiHandler
+	- Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler
 	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
 	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)
 	- Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory
