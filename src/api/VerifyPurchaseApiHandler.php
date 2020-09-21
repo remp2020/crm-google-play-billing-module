@@ -19,6 +19,7 @@ use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
+use Crm\UsersModule\Repositories\DeviceTokensRepository;
 use Crm\UsersModule\Repository\AccessTokensRepository;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
@@ -48,6 +49,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private $unclaimedUser;
     private $userMetaRepository;
     private $usersRepository;
+    private $deviceTokensRepository;
 
     /** @var string */
     private $packageName;
@@ -66,7 +68,8 @@ class VerifyPurchaseApiHandler extends ApiHandler
         SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
         UnclaimedUser $unclaimedUser,
         UserMetaRepository $userMetaRepository,
-        UsersRepository $usersRepository
+        UsersRepository $usersRepository,
+        DeviceTokensRepository $deviceTokensRepository
     ) {
         $this->accessTokensRepository = $accessTokensRepository;
         $this->applicationConfig = $applicationConfig;
@@ -80,6 +83,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $this->unclaimedUser = $unclaimedUser;
         $this->userMetaRepository = $userMetaRepository;
         $this->usersRepository = $usersRepository;
+        $this->deviceTokensRepository = $deviceTokensRepository;
     }
 
     public function params()
@@ -362,23 +366,9 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 "google_play_billing_{$rand}",
                 GooglePlayBillingModule::USER_SOURCE_APP
             );
-
-            // pair new unclaimed user with device token from authorization
-            $deviceToken = null;
-            foreach ($authorization->getAccessTokens() as $accessToken) {
-                if (isset($accessToken->device_token)) {
-                    $deviceToken = $accessToken->device_token;
-                    break;
-                }
-            }
-            if (!$deviceToken) {
-                Debugger::log("No device token found. Unable to pair new unclaimed user [{$user->id}].", Debugger::ERROR);
-            }
-
-            $unclaimedUserAccessToken = $this->accessTokensRepository->add($user, 3, GooglePlayBillingModule::USER_SOURCE_APP);
-            $this->accessTokensRepository->pairWithDeviceToken($unclaimedUserAccessToken, $deviceToken);
         }
 
+        $this->pairUserWithAuthorizedToken($authorization, $user);
         return $user;
     }
 
@@ -432,5 +422,34 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $purchaseToken
         );
         $googleAcknowledger->acknowledge();
+    }
+
+    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, $user)
+    {
+        // pair new unclaimed user with device token from authorization
+        $deviceToken = null;
+        foreach ($authorization->getAccessTokens() as $accessToken) {
+            if (isset($accessToken->device_token)) {
+                $deviceToken = $accessToken->device_token;
+                break;
+            }
+        }
+
+        if (!$deviceToken) {
+            // try to read the token from authorized data (if handler was authorized directly with device token)
+            $token = $authorization->getAuthorizedData()['token'] ?? null;
+            if (isset($token->token)) {
+                // just make sure it's actual and valid device token
+                $deviceToken = $this->deviceTokensRepository->findByToken($token->token);
+            }
+        }
+
+        if ($deviceToken) {
+            $unclaimedUserAccessToken = $this->accessTokensRepository->add($user, 3, GooglePlayBillingModule::USER_SOURCE_APP);
+            $this->accessTokensRepository->pairWithDeviceToken($unclaimedUserAccessToken, $deviceToken);
+        } else {
+            // TODO: shouldn't we throw an exception here? or return special error to the app?
+            Debugger::log("No device token found. Unable to pair new unclaimed user [{$user->id}].", Debugger::ERROR);
+        }
     }
 }
