@@ -398,7 +398,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             case 0:
                 $cancelData['cancel_reason'] = 'cancelled_by_user';
                 $cancelSurveyResult = $subscriptionResponse->getRawResponse()->getCancelSurveyResult();
-                if ($cancelSurveyResult->getCancelSurveyReason()) {
+                if ($cancelSurveyResult && $cancelSurveyResult->getCancelSurveyReason()) {
                     switch ($cancelSurveyResult->getCancelSurveyReason()) {
                         case 0:
                             $cancelData['cancel_survey_reason'] = 'other';
