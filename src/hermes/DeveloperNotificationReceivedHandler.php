@@ -373,7 +373,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
     public function getSubscriptionType(ActiveRow $developerNotification): ActiveRow
     {
-        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findBySubscriptionId($developerNotification->subscription_id);
+        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($developerNotification->subscription_id);
         if (!$googlePlaySubscriptionType || !isset($googlePlaySubscriptionType->subscription_type)) {
             throw new \Exception("Unable to find SubscriptionType with code [{$developerNotification->subscription_id}] provided by DeveloperNotification.");
         }

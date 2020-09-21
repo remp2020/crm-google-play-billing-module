@@ -170,7 +170,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private function createPayment(ActiveRow $user, SubscriptionResponse $subscriptionResponse, string $purchaseToken, string $googleProductId, ?string $articleID): JsonResponse
     {
         // validate subscription type
-        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findBySubscriptionId($googleProductId);
+        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($googleProductId);
         if (!$googlePlaySubscriptionType) {
             Debugger::log(
                 "Unable to find SubscriptionType for Google Play product ID [{$googleProductId}].",

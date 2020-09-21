@@ -9,11 +9,20 @@ class GooglePlaySubscriptionTypesRepository extends Repository
 {
     protected $tableName = 'google_play_billing_subscription_types';
 
-    /**
-     * @param string $subscriptionId Identification of Google Play Billing subscription type
-     */
-    public function findBySubscriptionId(string $subscriptionId): ?ActiveRow
+    final public function add(string $googlePlaySubscriptionId, ActiveRow $subscriptionType)
     {
-        return $this->findBy('subscription_id', $subscriptionId) ?? null;
+        return $this->getTable()->insert([
+            'subscription_id' => $googlePlaySubscriptionId,
+            'subscription_type_id' => $subscriptionType->id,
+        ]);
+    }
+
+    final public function findByGooglePlaySubscriptionId(string $googlePlaySubscriptionId): ?ActiveRow
+    {
+        $row = $this->findBy('subscription_id', $googlePlaySubscriptionId);
+        if (!$row) {
+            return null;
+        }
+        return $row;
     }
 }
