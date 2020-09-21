@@ -51,8 +51,6 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private $usersRepository;
     private $deviceTokensRepository;
 
-    /** @var string */
-    private $packageName;
     /** @var Validator */
     private $googlePlayValidator;
 
@@ -123,7 +121,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
         /** @var ActiveRow $user */
         $user = $userOrResponse;
 
-        return $this->createPayment($user, $subscriptionResponse, $purchaseSubscription->purchaseToken, $purchaseSubscription->productId, $payload->article_id ?? null);
+        return $this->createPayment(
+            $user,
+            $subscriptionResponse,
+            $purchaseSubscription->packageName,
+            $purchaseSubscription->productId,
+            $purchaseSubscription->purchaseToken,
+            $payload->article_id ?? null
+        );
     }
 
     /**
@@ -167,8 +172,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
         return $gSubscription;
     }
 
-    private function createPayment(ActiveRow $user, SubscriptionResponse $subscriptionResponse, string $purchaseToken, string $googleProductId, ?string $articleID): JsonResponse
-    {
+    private function createPayment(
+        ActiveRow $user,
+        SubscriptionResponse $subscriptionResponse,
+        string $packageName,
+        string $googleProductId,
+        string $purchaseToken,
+        ?string $articleID
+    ): JsonResponse {
         // validate subscription type
         $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($googleProductId);
         if (!$googlePlaySubscriptionType) {
@@ -211,7 +222,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         if ($paymentWithPurchaseToken) {
             // payment is created internally; we can confirm it in Google
             if (!$subscriptionResponse->isAcknowledged()) {
-                $this->acknowledge($googleProductId, $purchaseToken);
+                $this->acknowledge($packageName, $googleProductId, $purchaseToken);
             }
 
             $response = new JsonResponse([
@@ -245,7 +256,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
             // payment is created internally; we can confirm it in Google
             if (!$subscriptionResponse->isAcknowledged()) {
-                $this->acknowledge($googleProductId, $purchaseToken);
+                $this->acknowledge($packageName, $googleProductId, $purchaseToken);
             }
 
             $response = new JsonResponse([
@@ -282,7 +293,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
         // payment is created internally; we can confirm it in Google
         if (!$subscriptionResponse->isAcknowledged()) {
-            $this->acknowledge($googleProductId, $purchaseToken);
+            $this->acknowledge($packageName, $googleProductId, $purchaseToken);
         }
 
         $response = new JsonResponse([
@@ -413,11 +424,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
         return $userId;
     }
 
-    private function acknowledge(string $googleProductId, string $purchaseToken)
+    private function acknowledge(string $packageName, string $googleProductId, string $purchaseToken)
     {
         $googleAcknowledger = new Acknowledger(
             $this->googlePlayValidator->getPublisherService(),
-            $this->packageName,
+            $packageName,
             $googleProductId,
             $purchaseToken
         );
