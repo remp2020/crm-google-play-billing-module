@@ -26,7 +26,8 @@ class GooglePlayPurchaseTokens extends AbstractMigration
 
         $sql = <<<SQL
 INSERT INTO google_play_billing_purchase_tokens (purchase_token, package_name, subscription_id)
-SELECT purchase_token, package_name, subscription_id FROM google_play_billing_developer_notifications;
+SELECT purchase_token, package_name, subscription_id FROM google_play_billing_developer_notifications
+GROUP BY purchase_token, package_name, subscription_id;
 
 UPDATE google_play_billing_developer_notifications
 JOIN google_play_billing_purchase_tokens
