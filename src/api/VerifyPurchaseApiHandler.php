@@ -413,10 +413,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
     {
         $userId = null;
 
-        if (method_exists($subscriptionResponse, 'getObfuscatedExternalAccountId')) {
-            $userId = $subscriptionResponse->getObfuscatedExternalAccountId() ?? null;
-        } elseif (isset($subscriptionResponse->getRawResponse()['modelData']['obfuscatedExternalAccountId'])) {
-            $userId = $subscriptionResponse->getRawResponse()['modelData']['obfuscatedExternalAccountId'];
+        $googleResponse = $subscriptionResponse->getRawResponse();
+        if (method_exists($googleResponse, 'getObfuscatedExternalAccountId')) {
+            $userId = $googleResponse->getObfuscatedExternalAccountId() ?? null;
+        } elseif (isset($googleResponse['modelData']['obfuscatedExternalAccountId'])) {
+            $userId = $googleResponse['modelData']['obfuscatedExternalAccountId'];
         } else {
             Debugger::log('Missing `getObfuscatedExternalAccountId`. You should switch to version 2.2+ of Google Play Billing library. Trying to find `obfuscatedExternalAccountId` in deprecated DeveloperPayload.', Debugger::WARNING);
             if (method_exists($subscriptionResponse, 'getDeveloperPayload')) {
