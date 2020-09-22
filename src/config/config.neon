@@ -16,5 +16,6 @@ services:
 	- Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory
 	- Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository
 	- Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository
+	- Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository
 	- Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder
 	- Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder

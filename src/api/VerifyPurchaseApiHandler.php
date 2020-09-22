@@ -13,6 +13,7 @@ use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
 use Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessorInterface;
 use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository;
+use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
@@ -50,6 +51,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private $userMetaRepository;
     private $usersRepository;
     private $deviceTokensRepository;
+    private $purchaseTokensRepository;
 
     /** @var Validator */
     private $googlePlayValidator;
@@ -67,7 +69,8 @@ class VerifyPurchaseApiHandler extends ApiHandler
         UnclaimedUser $unclaimedUser,
         UserMetaRepository $userMetaRepository,
         UsersRepository $usersRepository,
-        DeviceTokensRepository $deviceTokensRepository
+        DeviceTokensRepository $deviceTokensRepository,
+        PurchaseTokensRepository $purchaseTokensRepository
     ) {
         $this->accessTokensRepository = $accessTokensRepository;
         $this->applicationConfig = $applicationConfig;
@@ -82,6 +85,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $this->userMetaRepository = $userMetaRepository;
         $this->usersRepository = $usersRepository;
         $this->deviceTokensRepository = $deviceTokensRepository;
+        $this->purchaseTokensRepository = $purchaseTokensRepository;
     }
 
     public function params()
@@ -105,6 +109,12 @@ class VerifyPurchaseApiHandler extends ApiHandler
         // TODO: validate multiple receipts (purchase restore)
         $purchaseSubscription = reset($payload->purchaseSubscriptions);
 
+        $purchaseTokenRow = $this->purchaseTokensRepository->add(
+            $purchaseSubscription->purchaseToken,
+            $purchaseSubscription->packageName,
+            $purchaseSubscription->productId
+        );
+
         // verify receipt in Google system
         $subscriptionOrResponse =  $this->verifyGooglePlayBillingPurchaseSubscription($purchaseSubscription);
         if ($subscriptionOrResponse instanceof JsonResponse) {
@@ -124,9 +134,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         return $this->createPayment(
             $user,
             $subscriptionResponse,
-            $purchaseSubscription->packageName,
-            $purchaseSubscription->productId,
-            $purchaseSubscription->purchaseToken,
+            $purchaseTokenRow,
             $payload->article_id ?? null
         );
     }
@@ -175,16 +183,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private function createPayment(
         ActiveRow $user,
         SubscriptionResponse $subscriptionResponse,
-        string $packageName,
-        string $googleProductId,
-        string $purchaseToken,
+        ActiveRow $purchaseTokenRow,
         ?string $articleID
     ): JsonResponse {
         // validate subscription type
-        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($googleProductId);
+        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($purchaseTokenRow->subscription_id);
         if (!$googlePlaySubscriptionType) {
             Debugger::log(
-                "Unable to find SubscriptionType for Google Play product ID [{$googleProductId}].",
+                "Unable to find SubscriptionType for Google Play product ID [{$purchaseTokenRow->subscription_id}].",
                 Debugger::ERROR
             );
             $response = new JsonResponse([
@@ -217,12 +223,12 @@ class VerifyPurchaseApiHandler extends ApiHandler
         // check if payment with this purchase token already exists
         $paymentWithPurchaseToken = $this->paymentMetaRepository->findByMeta(
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $purchaseToken
+            $purchaseTokenRow->purchase_token
         );
         if ($paymentWithPurchaseToken) {
             // payment is created internally; we can confirm it in Google
             if (!$subscriptionResponse->isAcknowledged()) {
-                $this->acknowledge($packageName, $googleProductId, $purchaseToken);
+                $this->acknowledge($purchaseTokenRow);
             }
 
             $response = new JsonResponse([
@@ -235,7 +241,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         }
 
         $metas = [
-            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN => $purchaseToken,
+            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN => $purchaseTokenRow->purchase_token,
             GooglePlayBillingModule::META_KEY_ORDER_ID => $subscriptionResponse->getRawResponse()->getOrderId(),
         ];
         if ($articleID) {
@@ -256,7 +262,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
             // payment is created internally; we can confirm it in Google
             if (!$subscriptionResponse->isAcknowledged()) {
-                $this->acknowledge($packageName, $googleProductId, $purchaseToken);
+                $this->acknowledge($purchaseTokenRow);
             }
 
             $response = new JsonResponse([
@@ -293,7 +299,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
         // payment is created internally; we can confirm it in Google
         if (!$subscriptionResponse->isAcknowledged()) {
-            $this->acknowledge($packageName, $googleProductId, $purchaseToken);
+            $this->acknowledge($purchaseTokenRow);
         }
 
         $response = new JsonResponse([
@@ -424,13 +430,13 @@ class VerifyPurchaseApiHandler extends ApiHandler
         return $userId;
     }
 
-    private function acknowledge(string $packageName, string $googleProductId, string $purchaseToken)
+    private function acknowledge(ActiveRow $purchaseTokenRow)
     {
         $googleAcknowledger = new Acknowledger(
             $this->googlePlayValidator->getPublisherService(),
-            $packageName,
-            $googleProductId,
-            $purchaseToken
+            $purchaseTokenRow->package_name,
+            $purchaseTokenRow->subscription_id,
+            $purchaseTokenRow->purchase_token
         );
         $googleAcknowledger->acknowledge();
     }

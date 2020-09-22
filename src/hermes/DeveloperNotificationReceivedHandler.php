@@ -12,7 +12,6 @@ use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
@@ -45,8 +44,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
     private $paymentsRepository;
 
-    private $recurrentPaymentsRepository;
-
     private $subscriptionsRepository;
 
     private $subscriptionMetaRepository;
@@ -61,7 +58,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         PaymentGatewaysRepository $paymentGatewaysRepository,
         PaymentMetaRepository $paymentMetaRepository,
         PaymentsRepository $paymentsRepository,
-        RecurrentPaymentsRepository $recurrentPaymentsRepository,
         SubscriptionsRepository $subscriptionsRepository,
         SubscriptionMetaRepository $subscriptionMetaRepository
     ) {
@@ -71,7 +67,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         $this->paymentGatewaysRepository = $paymentGatewaysRepository;
         $this->paymentMetaRepository = $paymentMetaRepository;
         $this->paymentsRepository = $paymentsRepository;
-        $this->recurrentPaymentsRepository = $recurrentPaymentsRepository;
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->subscriptionMetaRepository = $subscriptionMetaRepository;
         $this->subscriptionResponseProcessor = $subscriptionResponseProcessor;

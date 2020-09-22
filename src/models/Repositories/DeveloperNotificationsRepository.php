@@ -73,9 +73,7 @@ class DeveloperNotificationsRepository extends Repository
      * @return bool|int|IRow
      */
     public function add(
-        string $packageName,
-        string $purchaseToken,
-        string $subscriptionId,
+        IRow $purchaseToken,
         DateTime $eventTime,
         int $notificationType,
         string $status = self::STATUS_NEW
@@ -85,9 +83,10 @@ class DeveloperNotificationsRepository extends Repository
         }
 
         $developerNotification = $this->insert([
-            'package_name' => $packageName,
-            'purchase_token' => $purchaseToken,
-            'subscription_id' => $subscriptionId,
+            'purchase_token_id' => $purchaseToken->id,
+            'package_name' => $purchaseToken->package_name,
+            'purchase_token' => $purchaseToken->purchase_token,
+            'subscription_id' => $purchaseToken->subscription_id,
             'event_time' => $eventTime,
             'notification_type' => $notificationType,
             'status' => $status,

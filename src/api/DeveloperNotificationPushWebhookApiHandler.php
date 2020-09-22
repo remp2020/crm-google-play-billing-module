@@ -7,6 +7,7 @@ use Crm\ApiModule\Api\JsonResponse;
 use Crm\ApiModule\Api\JsonValidationTrait;
 use Crm\ApiModule\Authorization\ApiAuthorizationInterface;
 use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
+use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Nette\Http\Response;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;
@@ -18,10 +19,14 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
 
     private $developerNotificationsRepository;
 
+    private $purchaseTokensRepository;
+
     public function __construct(
-        DeveloperNotificationsRepository $developerNotificationsRepository
+        DeveloperNotificationsRepository $developerNotificationsRepository,
+        PurchaseTokensRepository $purchaseTokensRepository
     ) {
         $this->developerNotificationsRepository = $developerNotificationsRepository;
+        $this->purchaseTokensRepository = $purchaseTokensRepository;
     }
 
     public function params()
@@ -63,11 +68,15 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         $eventTime = DateTime::createFromFormat("U.u", $developerNotification->eventTimeMillis / 1000);
         $eventTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
+        $purchaseTokenRow = $this->purchaseTokensRepository->add(
+            $developerNotification->subscriptionNotification->purchaseToken,
+            $developerNotification->packageName,
+            $developerNotification->subscriptionNotification->subscriptionId
+        );
+
         // exception from mysql will stop execution; message won't be acknowledged; no need to send internal mysql exception to google
         $this->developerNotificationsRepository->add(
-            $developerNotification->packageName,
-            $developerNotification->subscriptionNotification->purchaseToken,
-            $developerNotification->subscriptionNotification->subscriptionId,
+            $purchaseTokenRow,
             $eventTime,
             $developerNotification->subscriptionNotification->notificationType,
             DeveloperNotificationsRepository::STATUS_NEW
