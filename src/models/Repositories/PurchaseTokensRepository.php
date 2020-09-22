@@ -4,6 +4,8 @@ namespace Crm\GooglePlayBillingModule\Repository;
 
 use Crm\ApplicationModule\Repository;
 use Nette\Database\Table\ActiveRow;
+use Nette\Database\Table\IRow;
+use Nette\Utils\DateTime;
 
 class PurchaseTokensRepository extends Repository
 {
@@ -11,18 +13,29 @@ class PurchaseTokensRepository extends Repository
 
     final public function add(string $purchaseToken, string $packageName, string $subscriptionId)
     {
-        $payload = [
+        $row = $this->findByPurchaseToken($purchaseToken);
+        if ($row) {
+            $this->update($row, [
+                'purchase_token' => $purchaseToken,
+                'package_name' => $packageName,
+                'subscription_id' => $subscriptionId,
+            ]);
+            return $row;
+        }
+        $now = new DateTime();
+        return $this->getTable()->insert([
             'purchase_token' => $purchaseToken,
             'package_name' => $packageName,
             'subscription_id' => $subscriptionId,
-        ];
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+    }
 
-        $row = $this->findByPurchaseToken($purchaseToken);
-        if ($row) {
-            $this->update($row, $payload);
-            return $row;
-        }
-        return $this->getTable()->insert($payload);
+    final public function update(IRow &$row, $data)
+    {
+        $data['updated_at'] = new DateTime();
+        return parent::update($row, $data);
     }
 
     final public function findByPurchaseToken(string $purchaseToken): ?ActiveRow
