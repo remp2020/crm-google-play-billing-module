@@ -6,13 +6,13 @@ use Crm\ApiModule\Api\ApiHandler;
 use Crm\ApiModule\Api\JsonResponse;
 use Crm\ApiModule\Api\JsonValidationTrait;
 use Crm\ApiModule\Authorization\ApiAuthorizationInterface;
-use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
 use Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessorInterface;
 use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository;
+use Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
@@ -39,7 +39,6 @@ class VerifyPurchaseApiHandler extends ApiHandler
     use JsonValidationTrait;
 
     private $accessTokensRepository;
-    private $applicationConfig;
     private $developerNotificationReceivedHandler;
     private $googlePlayValidatorFactory;
     private $googlePlaySubscriptionTypesRepository;
@@ -52,13 +51,13 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private $usersRepository;
     private $deviceTokensRepository;
     private $purchaseTokensRepository;
+    private $purchaseDeviceTokensRepository;
 
     /** @var Validator */
     private $googlePlayValidator;
 
     public function __construct(
         AccessTokensRepository $accessTokensRepository,
-        ApplicationConfig $applicationConfig,
         DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler,
         GooglePlayValidatorFactory $googlePlayValidatorFactory,
         GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
@@ -70,10 +69,10 @@ class VerifyPurchaseApiHandler extends ApiHandler
         UserMetaRepository $userMetaRepository,
         UsersRepository $usersRepository,
         DeviceTokensRepository $deviceTokensRepository,
-        PurchaseTokensRepository $purchaseTokensRepository
+        PurchaseTokensRepository $purchaseTokensRepository,
+        PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository
     ) {
         $this->accessTokensRepository = $accessTokensRepository;
-        $this->applicationConfig = $applicationConfig;
         $this->developerNotificationReceivedHandler = $developerNotificationReceivedHandler;
         $this->googlePlayValidatorFactory = $googlePlayValidatorFactory;
         $this->googlePlaySubscriptionTypesRepository = $googlePlaySubscriptionTypesRepository;
@@ -86,6 +85,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $this->usersRepository = $usersRepository;
         $this->deviceTokensRepository = $deviceTokensRepository;
         $this->purchaseTokensRepository = $purchaseTokensRepository;
+        $this->purchaseDeviceTokensRepository = $purchaseDeviceTokensRepository;
     }
 
     public function params()
@@ -387,7 +387,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             );
         }
 
-        $this->pairUserWithAuthorizedToken($authorization, $user);
+        $this->pairUserWithAuthorizedToken($authorization, $user, $subscriptionResponse->getRawResponse()->getPurchaseToken());
         return $user;
     }
 
@@ -445,7 +445,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $googleAcknowledger->acknowledge();
     }
 
-    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, $user)
+    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, $user, $purchaseToken)
     {
         // pair new unclaimed user with device token from authorization
         $deviceToken = null;
@@ -468,6 +468,12 @@ class VerifyPurchaseApiHandler extends ApiHandler
         if ($deviceToken) {
             $unclaimedUserAccessToken = $this->accessTokensRepository->add($user, 3, GooglePlayBillingModule::USER_SOURCE_APP);
             $this->accessTokensRepository->pairWithDeviceToken($unclaimedUserAccessToken, $deviceToken);
+
+            $purchaseTokenRow = $this->purchaseTokensRepository->findByPurchaseToken($purchaseToken);
+            $this->purchaseDeviceTokensRepository->add(
+                $purchaseTokenRow,
+                $deviceToken
+            );
         } else {
             // TODO: shouldn't we throw an exception here? or return special error to the app?
             Debugger::log("No device token found. Unable to pair new unclaimed user [{$user->id}].", Debugger::ERROR);
