@@ -26,6 +26,7 @@ use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Crm\UsersModule\User\UnclaimedUser;
 use Nette\Database\Table\ActiveRow;
+use Nette\Database\Table\IRow;
 use Nette\Http\Response;
 use Nette\Utils\Json;
 use Nette\Utils\Random;
@@ -124,7 +125,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $subscriptionResponse = $subscriptionOrResponse;
 
         // load user (from token or receipt)
-        $userOrResponse = $this->getUser($authorization, $subscriptionResponse);
+        $userOrResponse = $this->getUser($authorization, $subscriptionResponse, $purchaseTokenRow);
         if ($userOrResponse instanceof JsonResponse) {
             return $userOrResponse;
         }
@@ -314,8 +315,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
     /**
      * @return ActiveRow|JsonResponse - Return $user (ActiveRow) or JsonResponse which should be returnd by API.
      */
-    private function getUser(UserTokenAuthorization $authorization, SubscriptionResponse $subscriptionResponse)
-    {
+    private function getUser(
+        UserTokenAuthorization $authorization,
+        SubscriptionResponse $subscriptionResponse,
+        IRow $purchaseTokenRow
+    ) {
         $user = null;
 
         // use authorized user if there is only one logged/claimed user or if there is only one unclaimed user
@@ -387,7 +391,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             );
         }
 
-        $this->pairUserWithAuthorizedToken($authorization, $user, $subscriptionResponse->getRawResponse()->getPurchaseToken());
+        $this->pairUserWithAuthorizedToken($authorization, $user, $purchaseTokenRow);
         return $user;
     }
 
@@ -445,7 +449,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $googleAcknowledger->acknowledge();
     }
 
-    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, $user, $purchaseToken)
+    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, $user, $purchaseTokenRow)
     {
         // pair new unclaimed user with device token from authorization
         $deviceToken = null;
@@ -469,7 +473,6 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $unclaimedUserAccessToken = $this->accessTokensRepository->add($user, 3, GooglePlayBillingModule::USER_SOURCE_APP);
             $this->accessTokensRepository->pairWithDeviceToken($unclaimedUserAccessToken, $deviceToken);
 
-            $purchaseTokenRow = $this->purchaseTokensRepository->findByPurchaseToken($purchaseToken);
             $this->purchaseDeviceTokensRepository->add(
                 $purchaseTokenRow,
                 $deviceToken
