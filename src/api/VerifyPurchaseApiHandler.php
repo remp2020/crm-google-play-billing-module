@@ -372,6 +372,8 @@ class VerifyPurchaseApiHandler extends ApiHandler
                         $response->setHttpCode(Response::S400_BAD_REQUEST);
                         return $response;
                     }
+                } else {
+                    $user = $userFromToken;
                 }
             }
         }
@@ -428,6 +430,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             }
         }
 
+        return 100000;
         return $userId;
     }
 
