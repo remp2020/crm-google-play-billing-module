@@ -9,6 +9,7 @@ use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\SeederManager;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
+use League\Event\Emitter;
 use Tomaj\Hermes\Dispatcher;
 
 class GooglePlayBillingModule extends CrmModule
@@ -50,5 +51,13 @@ class GooglePlayBillingModule extends CrmModule
     {
         $seederManager->addSeeder($this->getInstance(\Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder::class));
         $seederManager->addSeeder($this->getInstance(\Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder::class));
+    }
+
+    public function registerEventHandlers(Emitter $emitter)
+    {
+        $emitter->addListener(
+            \Crm\UsersModule\Events\RemovedAccessTokenEvent::class,
+            $this->getInstance(\Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler::class)
+        );
     }
 }
