@@ -434,7 +434,6 @@ class VerifyPurchaseApiHandler extends ApiHandler
             }
         }
 
-        return 100000;
         return $userId;
     }
 
