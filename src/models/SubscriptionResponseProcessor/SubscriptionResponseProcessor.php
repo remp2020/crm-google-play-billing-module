@@ -3,6 +3,7 @@
 namespace Crm\GooglePlayBillingModule\Model;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
+use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Crm\UsersModule\User\UnclaimedUser;
@@ -22,18 +23,23 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
 
     private $usersRepository;
 
+    private $paymentMetaRepository;
+
     public function __construct(
         UnclaimedUser $unclaimedUser,
         UserMetaRepository $userMetaRepository,
-        UsersRepository $usersRepository
+        UsersRepository $usersRepository,
+        PaymentMetaRepository $paymentMetaRepository
     ) {
         $this->unclaimedUser = $unclaimedUser;
         $this->userMetaRepository = $userMetaRepository;
         $this->usersRepository = $usersRepository;
+        $this->paymentMetaRepository = $paymentMetaRepository;
     }
 
     /**
-     * Default implementation of `SubscriptionResponse->getUser()` returns user based on obfuscatedExternalAccountId.
+     * Default implementation of `SubscriptionResponse->getUser()` returns user based on obfuscatedExternalAccountId
+     * and previous payments.
      *
      * Search for a user using `obfuscatedExternalAccountId` via:
      * - `SubscriptionResponse::getObfuscatedExternalAccountId()` (Google Play Billing, version >=2.2),
@@ -48,6 +54,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
     {
         $userId = null;
 
+        // try to read user ID directly from the notification
         $googleResponse = $subscriptionResponse->getRawResponse();
         if (method_exists($googleResponse, 'getObfuscatedExternalAccountId')) {
             $userId = $googleResponse->getObfuscatedExternalAccountId() ?? null;
@@ -66,6 +73,27 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
         $user = $this->usersRepository->find($userId);
         if ($user) {
             return $user;
+        }
+
+        // find user via existing payment
+        $paymentWithPurchaseToken = $this->paymentMetaRepository->findByMeta(
+            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+            $developerNotification->purchase_token
+        );
+        if ($paymentWithPurchaseToken) {
+            return $paymentWithPurchaseToken->payment->user;
+        }
+
+        // find user via linked purchase token in user meta
+        $usersWithPurchaseToken = $this->userMetaRepository->usersWithKey(
+            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+            $developerNotification->purchase_token
+        )->fetchAll();
+        if ($usersWithPurchaseToken) {
+            if (count($usersWithPurchaseToken) > 1) {
+                throw new \Exception("Multiple users with same purchase token [{$developerNotification->purchase_token}].");
+            }
+            return reset($usersWithPurchaseToken)->user;
         }
 
         // no user found; create anonymous unclaimed user (Android in-app purchases have to be possible without account in CRM)
