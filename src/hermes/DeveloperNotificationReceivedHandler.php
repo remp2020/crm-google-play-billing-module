@@ -193,6 +193,14 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
      */
     private function createPayment(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ?ActiveRow
     {
+        $paymentOrder = $this->paymentMetaRepository->findByMeta(
+            GooglePlayBillingModule::META_KEY_ORDER_ID,
+            $subscriptionResponse->getRawResponse()->getOrderId()
+        );
+        if ($paymentOrder) {
+            return $paymentOrder->payment;
+        }
+
         $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
 
         if (!in_array($subscriptionResponse->getPaymentState(), [

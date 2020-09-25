@@ -95,9 +95,15 @@ class DeveloperNotificationsRepository extends Repository
         ]);
 
         if ($developerNotification instanceof IRow) {
-            $this->hermesEmitter->emit(new HermesMessage('developer-notification-received', [
-                'developer_notification_id' => $developerNotification->getPrimary(),
-            ]));
+            $this->hermesEmitter->emit(new HermesMessage(
+                'developer-notification-received',
+                [
+                    'developer_notification_id' => $developerNotification->getPrimary(),
+                ],
+                null,
+                null,
+                DateTime::from('+15 seconds')->getTimestamp() // give verify purchase API some headroom
+            ));
         }
 
         return $developerNotification;
