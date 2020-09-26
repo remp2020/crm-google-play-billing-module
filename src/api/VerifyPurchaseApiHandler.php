@@ -136,7 +136,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $user,
             $subscriptionResponse,
             $purchaseTokenRow,
-            $payload->article_id ?? null
+            $payload->articleId ?? null
         );
     }
 
