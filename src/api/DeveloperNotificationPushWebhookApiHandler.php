@@ -65,7 +65,10 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             return $this->logAndReturnPayloadError("Only version 1.0 of SubscriptionNotification is supported.");
         }
 
-        $eventTime = DateTime::createFromFormat("U.u", $developerNotification->eventTimeMillis / 1000);
+        $eventTime = DateTime::createFromFormat(
+            "U.u",
+            sprintf("%.6f", $developerNotification->eventTimeMillis / 1000)
+        );
         $eventTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         $purchaseTokenRow = $this->purchaseTokensRepository->add(
