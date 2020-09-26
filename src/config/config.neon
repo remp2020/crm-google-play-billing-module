@@ -11,6 +11,7 @@ services:
 
 	- Crm\GooglePlayBillingModule\Api\DeveloperNotificationPushWebhookApiHandler
 	- Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler
+	- Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler
 	- Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler
 	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
 	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)

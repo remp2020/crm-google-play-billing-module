@@ -59,5 +59,9 @@ class GooglePlayBillingModule extends CrmModule
             \Crm\UsersModule\Events\RemovedAccessTokenEvent::class,
             $this->getInstance(\Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler::class)
         );
+        $emitter->addListener(
+            \Crm\UsersModule\Events\PairDeviceAccessTokensEvent::class,
+            $this->getInstance(\Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler::class)
+        );
     }
 }
