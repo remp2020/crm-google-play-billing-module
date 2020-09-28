@@ -133,6 +133,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $user = $userOrResponse;
 
         return $this->createPayment(
+            $authorization,
             $user,
             $subscriptionResponse,
             $purchaseTokenRow,
@@ -182,6 +183,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     }
 
     private function createPayment(
+        UserTokenAuthorization $authorization,
         ActiveRow $user,
         SubscriptionResponse $subscriptionResponse,
         ActiveRow $purchaseTokenRow,
@@ -231,6 +233,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
             if (!$subscriptionResponse->isAcknowledged()) {
                 $this->acknowledge($purchaseTokenRow);
             }
+            $this->pairUserWithAuthorizedToken(
+                $authorization,
+                $paymentWithPurchaseToken->payment->user,
+                $purchaseTokenRow
+            );
 
             $response = new JsonResponse([
                 'status' => 'ok',
@@ -469,8 +476,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
         }
 
         if ($deviceToken) {
-            $unclaimedUserAccessToken = $this->accessTokensRepository->add($user, 3, GooglePlayBillingModule::USER_SOURCE_APP);
-            $this->accessTokensRepository->pairWithDeviceToken($unclaimedUserAccessToken, $deviceToken);
+            $accessToken = $this->accessTokensRepository
+                ->allUserTokensBySource($user->id, GooglePlayBillingModule::USER_SOURCE_APP)
+                ->limit(1)
+                ->fetch();
+            if (!$accessToken) {
+                $accessToken = $this->accessTokensRepository->add($user, 3, GooglePlayBillingModule::USER_SOURCE_APP);
+            }
+            $this->accessTokensRepository->pairWithDeviceToken($accessToken, $deviceToken);
 
             $this->purchaseDeviceTokensRepository->add(
                 $purchaseTokenRow,
