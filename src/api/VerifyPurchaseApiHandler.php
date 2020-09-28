@@ -117,7 +117,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
         );
 
         // verify receipt in Google system
-        $subscriptionOrResponse =  $this->verifyGooglePlayBillingPurchaseSubscription($purchaseSubscription);
+        $subscriptionOrResponse =  $this->verifyGooglePlayBillingPurchaseSubscription(
+            $authorization,
+            $purchaseSubscription,
+            $purchaseTokenRow
+        );
         if ($subscriptionOrResponse instanceof JsonResponse) {
             return $subscriptionOrResponse;
         }
@@ -133,7 +137,6 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $user = $userOrResponse;
 
         return $this->createPayment(
-            $authorization,
             $user,
             $subscriptionResponse,
             $purchaseTokenRow,
@@ -144,8 +147,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
     /**
      * @return JsonResponse|SubscriptionResponse - Return validated subscription (SubscriptionResponse) or JsonResponse which should be returned by API.
      */
-    private function verifyGooglePlayBillingPurchaseSubscription($purchaseSubscription)
-    {
+    private function verifyGooglePlayBillingPurchaseSubscription(
+        UserTokenAuthorization $authorization,
+        $purchaseSubscription,
+        ActiveRow $purchaseTokenRow
+    ) {
         try {
             $this->googlePlayValidator = $this->googlePlayValidatorFactory->create();
             $gSubscription = $this->googlePlayValidator
@@ -179,11 +185,35 @@ class VerifyPurchaseApiHandler extends ApiHandler
             return $response;
         }
 
+        // check if payment with this purchase token already exists
+        $paymentWithPurchaseToken = $this->paymentMetaRepository->findByMeta(
+            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+            $purchaseTokenRow->purchase_token
+        );
+        if ($paymentWithPurchaseToken) {
+            // payment is created internally; we can confirm it in Google
+            if (!$gSubscription->isAcknowledged()) {
+                $this->acknowledge($purchaseTokenRow);
+            }
+            $this->pairUserWithAuthorizedToken(
+                $authorization,
+                $paymentWithPurchaseToken->payment->user,
+                $purchaseTokenRow
+            );
+
+            $response = new JsonResponse([
+                'status' => 'ok',
+                'code' => 'success_already_created',
+                'message' => "Google Play purchase verified (transaction was already processed).",
+            ]);
+            $response->setHttpCode(Response::S200_OK);
+            return $response;
+        }
+
         return $gSubscription;
     }
 
     private function createPayment(
-        UserTokenAuthorization $authorization,
         ActiveRow $user,
         SubscriptionResponse $subscriptionResponse,
         ActiveRow $purchaseTokenRow,
@@ -220,31 +250,6 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 'message' => "Unable to find PaymentGateway with code [{$paymentGatewayCode}].",
             ]);
             $response->setHttpCode(Response::S500_INTERNAL_SERVER_ERROR);
-            return $response;
-        }
-
-        // check if payment with this purchase token already exists
-        $paymentWithPurchaseToken = $this->paymentMetaRepository->findByMeta(
-            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $purchaseTokenRow->purchase_token
-        );
-        if ($paymentWithPurchaseToken) {
-            // payment is created internally; we can confirm it in Google
-            if (!$subscriptionResponse->isAcknowledged()) {
-                $this->acknowledge($purchaseTokenRow);
-            }
-            $this->pairUserWithAuthorizedToken(
-                $authorization,
-                $paymentWithPurchaseToken->payment->user,
-                $purchaseTokenRow
-            );
-
-            $response = new JsonResponse([
-                'status' => 'ok',
-                'code' => 'success_already_created',
-                'message' => "Google Play purchase verified (transaction was already processed).",
-            ]);
-            $response->setHttpCode(Response::S200_OK);
             return $response;
         }
 
