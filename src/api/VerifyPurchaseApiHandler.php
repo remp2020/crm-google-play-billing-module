@@ -424,7 +424,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
         if (!$userId) {
             return null;
         }
-        return $this->usersRepository->find($userId);
+        $user = $this->usersRepository->find($userId);
+        if (!$user) {
+            return null;
+        }
+        return $user;
     }
 
     private function getUserIdFromSubscriptionResponse(SubscriptionResponse $subscriptionResponse): ?string

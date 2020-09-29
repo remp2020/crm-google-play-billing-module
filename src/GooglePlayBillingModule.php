@@ -6,6 +6,7 @@ use Crm\ApiModule\Api\ApiRoutersContainerInterface;
 use Crm\ApiModule\Router\ApiIdentifier;
 use Crm\ApiModule\Router\ApiRoute;
 use Crm\ApplicationModule\CrmModule;
+use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\SeederManager;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
@@ -62,6 +63,14 @@ class GooglePlayBillingModule extends CrmModule
         $emitter->addListener(
             \Crm\UsersModule\Events\PairDeviceAccessTokensEvent::class,
             $this->getInstance(\Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler::class)
+        );
+    }
+
+    public function registerDataProviders(DataProviderManager $dataProviderManager)
+    {
+        $dataProviderManager->registerDataProvider(
+            'users.dataprovider.access_tokens',
+            $this->getInstance(\Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider::class)
         );
     }
 }
