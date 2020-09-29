@@ -487,6 +487,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         if ($deviceToken) {
             $accessToken = $this->accessTokensRepository
                 ->allUserTokensBySource($user->id, GooglePlayBillingModule::USER_SOURCE_APP)
+                ->where('device_token_id = ?', $deviceToken->id)
                 ->limit(1)
                 ->fetch();
             if (!$accessToken) {
