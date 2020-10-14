@@ -13,6 +13,7 @@ services:
 	- Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler
 	- Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider
 	- Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler
+	- Crm\GooglePlayBillingModule\Events\PaymentStatusChangeEventHandler
 	- Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler
 	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
 	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)

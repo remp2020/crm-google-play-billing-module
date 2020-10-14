@@ -64,6 +64,10 @@ class GooglePlayBillingModule extends CrmModule
             \Crm\UsersModule\Events\PairDeviceAccessTokensEvent::class,
             $this->getInstance(\Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler::class)
         );
+        $emitter->addListener(
+            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
+            $this->getInstance(\Crm\GooglePlayBillingModule\Events\PaymentStatusChangeEventHandler::class)
+        );
     }
 
     public function registerDataProviders(DataProviderManager $dataProviderManager)
