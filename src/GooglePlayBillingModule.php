@@ -8,6 +8,7 @@ use Crm\ApiModule\Router\ApiRoute;
 use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\SeederManager;
+use Crm\ApplicationModule\Widget\WidgetManagerInterface;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
 use League\Event\Emitter;
@@ -52,6 +53,7 @@ class GooglePlayBillingModule extends CrmModule
     {
         $seederManager->addSeeder($this->getInstance(\Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder::class));
         $seederManager->addSeeder($this->getInstance(\Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder::class));
+        $seederManager->addSeeder($this->getInstance(\Crm\GooglePlayBillingModule\Seeders\SnippetsSeeder::class), 100);
     }
 
     public function registerEventHandlers(Emitter $emitter)
@@ -75,6 +77,20 @@ class GooglePlayBillingModule extends CrmModule
         $dataProviderManager->registerDataProvider(
             'users.dataprovider.access_tokens',
             $this->getInstance(\Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider::class)
+        );
+    }
+
+    public function registerWidgets(WidgetManagerInterface $widgetManager)
+    {
+        $widgetManager->registerWidget(
+            'frontend.payments.listing.recurrent',
+            $this->getInstance(\Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class),
+            100
+        );
+        $widgetManager->registerWidget(
+            'payments.user_payments.listing.recurrent',
+            $this->getInstance(\Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class),
+            100
         );
     }
 }

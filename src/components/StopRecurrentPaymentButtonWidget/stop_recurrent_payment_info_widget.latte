@@ -1,0 +1,30 @@
+<a class="small" data-toggle="modal" data-target="#infoModal" style="display: block; padding-top: 4%; color: #b00c28; cursor: pointer">
+  <i class="fa fa-info-circle fa-wh"></i> {_"google_play_billing.frontend.stop_recurrent_payment_info_widget.info_button"}
+</a>
+
+<style>
+    .modal-title {
+        font-weight: bold;
+        font-size: 125%;
+    }
+</style>
+
+<!-- Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1" role="dialog" aria-labelledby="infoModalLabel"
+     aria-hidden="true" style="top: 48px">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="infoModalLabel"
+            id="exampleModalLabel">{_"google_play_billing.frontend.stop_recurrent_payment_info_widget.modal_title"}</h5>
+      </div>
+      <div class="modal-body">
+        <p>{control snippet 'google-stop-recurrent-info-widget-text'}</p>
+        <p>{_"google_play_billing.frontend.stop_recurrent_payment_info_widget.modal_text_manual"|noescape}</p>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-dismiss="modal">{_"google_play_billing.frontend.stop_recurrent_payment_info_widget.close"}</button>
+      </div>
+    </div>
+  </div>
+</div>

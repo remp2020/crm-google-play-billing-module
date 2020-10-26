@@ -2,3 +2,10 @@ config:
 	service_account:
 		display_name: Google Service Account
 		description: "Path to the JSON service account file belonging to the project through which Google Play Console will send payment notifications <i>(eg. <code>/data/web/example/credentials.json</code>)</i>."
+
+frontend:
+	stop_recurrent_payment_info_widget:
+		info_button: How to stop recurrent
+		modal_title: Stop recurrent payment
+		modal_text_manual: 'See <a class="link" href="https://support.google.com/googleplay/answer/7018481" target="_blank" style="font-weight: bold; color: #b00c28;">instructions</a> how to stop recurrent payment in Google Play.'
+		close: Close
