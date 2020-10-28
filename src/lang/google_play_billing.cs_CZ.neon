@@ -2,6 +2,10 @@ config:
 	service_account:
 		display_name: Google Service Account
 		description: "Cesta k service account JSON souboru patřícímu projektu, přes který má Google Play konzola posílat oznámení o platbách <i>(např. <code>/data/web/example/credentials.json</code>)</i>."
+	users:
+		prevent_anonymization:
+			name: Zabránit anonymizaci uživatele s aktivním Google Play předplatným
+			description: Zabráni anonymizaci uživatele v případě pokud má aktivne Google Play předplatné
 
 frontend:
 	stop_recurrent_payment_info_widget:
@@ -9,3 +13,7 @@ frontend:
 		modal_title: Zastavit opakování platby
 		modal_text_manual: 'Viz <a class="link" href="https://support.google.com/googleplay/answer/7018481" target="_blank" style="font-weight: bold; color: #b00c28;">návod</a>, jak zastavit platbu v Google Play.'
 		close: Zavřít
+
+data_provider:
+	delete:
+		active_subscription: Uživatel má aktivní předplatné přes Google Play a nemůže být smazán

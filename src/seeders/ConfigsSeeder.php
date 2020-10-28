@@ -6,12 +6,16 @@ use Crm\ApplicationModule\Builder\ConfigBuilder;
 use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\ApplicationModule\Config\Repository\ConfigCategoriesRepository;
 use Crm\ApplicationModule\Config\Repository\ConfigsRepository;
+use Crm\ApplicationModule\Seeders\ConfigsTrait;
 use Crm\ApplicationModule\Seeders\ISeeder;
+use Crm\GooglePlayBillingModule\Model\Config;
 use Nette\Database\Table\ActiveRow;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class ConfigsSeeder implements ISeeder
 {
+    use ConfigsTrait;
+
     private $configCategoriesRepository;
 
     private $configsRepository;
@@ -49,6 +53,19 @@ class ConfigsSeeder implements ISeeder
             'google_play_billing.config.service_account.description',
             '',
             $sorting++
+        );
+
+        $category = $this->getCategory($output, 'subscriptions.config.users.category', 'fa fa-user', 300);
+
+        $this->addConfig(
+            $output,
+            $category,
+            Config::GOOGLE_BLOCK_ANONYMIZATION,
+            ApplicationConfig::TYPE_BOOLEAN,
+            'google_play_billing.config.users.prevent_anonymization.name',
+            'google_play_billing.config.users.prevent_anonymization.description',
+            true,
+            201
         );
     }
 

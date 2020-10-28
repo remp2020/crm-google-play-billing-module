@@ -26,3 +26,4 @@ services:
 	- Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder
 	- Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder
 	- Crm\GooglePlayBillingModule\Seeders\SnippetsSeeder
+	- Crm\GooglePlayBillingModule\User\GooglePlayUserDataProvider

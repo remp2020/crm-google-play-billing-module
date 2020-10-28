@@ -9,6 +9,7 @@ use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\SeederManager;
 use Crm\ApplicationModule\Widget\WidgetManagerInterface;
+use Crm\ApplicationModule\User\UserDataRegistrator;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
 use League\Event\Emitter;
@@ -92,5 +93,10 @@ class GooglePlayBillingModule extends CrmModule
             $this->getInstance(\Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class),
             100
         );
+    }
+
+    public function registerUserData(UserDataRegistrator $dataRegistrator)
+    {
+        $dataRegistrator->addUserDataProvider($this->getInstance(\Crm\GooglePlayBillingModule\User\GooglePlayUserDataProvider::class));
     }
 }
