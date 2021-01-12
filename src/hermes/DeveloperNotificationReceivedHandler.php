@@ -231,7 +231,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             return $this->createGoogleFreeTrialSubscription($user, $subscriptionType, $subscriptionStartAt, $subscriptionEndAt, $metas);
         }
 
-        $amount = ($subscriptionResponse->getPriceAmountMicros() / 1000000);
         $recurrentCharge = false;
         $paymentItemContainer = (new PaymentItemContainer())
             ->addItems(SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType));
@@ -267,7 +266,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $user,
             $paymentItemContainer,
             '',
-            $amount,
+            $subscriptionType->price,
             $subscriptionStartAt,
             $subscriptionEndAt,
             null,
