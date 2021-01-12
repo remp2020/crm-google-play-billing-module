@@ -16,6 +16,8 @@ use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
+use Crm\SubscriptionsModule\Seeders\SubscriptionExtensionMethodsSeeder;
+use Crm\SubscriptionsModule\Seeders\SubscriptionLengthMethodSeeder;
 use Crm\UsersModule\Auth\UserManager;
 use Crm\UsersModule\Events\RemovedAccessTokenEvent;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
@@ -69,6 +71,8 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
     protected function requiredSeeders(): array
     {
         return [
+            SubscriptionExtensionMethodsSeeder::class,
+            SubscriptionLengthMethodSeeder::class,
             \Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder::class
         ];
     }
