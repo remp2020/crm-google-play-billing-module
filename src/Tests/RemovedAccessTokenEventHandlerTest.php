@@ -10,6 +10,7 @@ use Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
+use Crm\PaymentsModule\Repository\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
@@ -59,6 +60,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
             AccessTokensRepository::class,
             DeviceTokensRepository::class,
             PaymentMetaRepository::class,
+            PaymentItemMetaRepository::class,
             PaymentGatewaysRepository::class,
             PurchaseTokensRepository::class,
             PurchaseDeviceTokensRepository::class,
