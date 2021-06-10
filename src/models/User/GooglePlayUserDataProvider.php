@@ -101,7 +101,14 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
                         ->setPurchaseToken($purchaseTokenRow->purchase_token)
                         ->setProductId($purchaseTokenRow->subscription_id)
                         ->validateSubscription();
-                } catch (Exception | \GuzzleHttp\Exception\GuzzleException | \Google_Exception $e) {
+                } catch (\Google_Exception $e) {
+                    if ($e->getCode() === 410) {
+                        //The subscription purchase is no longer available for query because it has been expired for too long.
+                        continue;
+                    }
+
+                    throw new Exception("Unable to validate Google Play payment. Error: [{$e->getMessage()}]");
+                } catch (Exception | \GuzzleHttp\Exception\GuzzleException $e) {
                     throw new Exception("Unable to validate Google Play payment. Error: [{$e->getMessage()}]");
                 }
 
