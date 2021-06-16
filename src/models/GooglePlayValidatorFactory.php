@@ -22,7 +22,7 @@ class GooglePlayValidatorFactory
 
     public function create(): Validator
     {
-        $applicationName = $this->applicationConfig->get('site_name');
+        $applicationName = $this->applicationConfig->get('site_title');
 
         $credentialsFile = $this->applicationConfig->get('google_play_billing_service_account_credentials_json');
         if (!$credentialsFile) {
