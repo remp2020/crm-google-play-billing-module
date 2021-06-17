@@ -103,7 +103,7 @@ class DeveloperNotificationsRepository extends Repository
                 null,
                 null,
                 DateTime::from('+15 seconds')->getTimestamp() // give verify purchase API some headroom
-            ));
+            ), HermesMessage::PRIORITY_HIGH);
         }
 
         return $developerNotification;
