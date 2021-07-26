@@ -47,10 +47,13 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             return $this->logAndReturnPayloadError("Malformed JSON. Error: [{$e->getMessage()}].");
         }
 
-        // decode & validate DeveloperNotification
+        // decode & validate DeveloperNotification
         $result = $this->validateInput(__DIR__ . '/developer-notification.schema.json', base64_decode($json->message->data));
         if ($result->hasErrorResponse()) {
-            return $result->getErrorResponse();
+            $errors = $this->getErrorsFromErrorResponse($result->getErrorResponse());
+            return $this->logAndReturnPayloadError(
+                "Unable to parse JSON of Google's DeveloperNotification. Errors: [" . print_r($errors, true) . '].'
+            );
         }
         $developerNotification = $result->getParsedObject();
 
