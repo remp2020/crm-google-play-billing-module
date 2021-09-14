@@ -52,9 +52,11 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         if ($result->hasErrorResponse()) {
             $errorResponse = $result->getErrorResponse();
             $errorPayload = $errorResponse->getPayload();
-            return $this->logAndReturnPayloadError(
-                "Unable to parse JSON of Google's DeveloperNotification. " . $errorPayload['message'] . ". Errors: [" . print_r($errorPayload['errors'], true) . '].'
-            );
+            return $this->logAndReturnPayloadError(sprintf(
+                "Unable to parse JSON of Google's DeveloperNotification: %s. %s",
+                $errorPayload['message'],
+                isset($errorPayload['errors']) ? ". Errors: [" . print_r($errorPayload['errors'], true) . '].' : ''
+            ));
         }
         $developerNotification = $result->getParsedObject();
 
