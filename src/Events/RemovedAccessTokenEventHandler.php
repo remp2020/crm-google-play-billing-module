@@ -78,7 +78,7 @@ class RemovedAccessTokenEventHandler extends AbstractListener
                 $accessToken = $this->accessTokensRepository->add(
                     $user,
                     3,
-                    GooglePlayBillingModule::USER_SOURCE_APP
+                    $event->getSource() ?? GooglePlayBillingModule::USER_SOURCE_APP
                 );
                 $this->accessTokensRepository->pairWithDeviceToken($accessToken, $deviceToken);
             }

@@ -101,7 +101,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         }
 
         // validate input
-        $validator = $this->validateInput(__DIR__ . '/verify-purchase.schema.json');
+        $validator = $this->validateInput(__DIR__ . '/verify-purchase.schema.json', $this->rawPayload());
         if ($validator->hasErrorResponse()) {
             return $validator->getErrorResponse();
         }
@@ -153,12 +153,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
         ActiveRow $purchaseTokenRow
     ) {
         try {
-            $this->googlePlayValidator = $this->googlePlayValidatorFactory->create();
-            $gSubscription = $this->googlePlayValidator
-                ->setPackageName($purchaseSubscription->packageName)
-                ->setPurchaseToken($purchaseSubscription->purchaseToken)
-                ->setProductId($purchaseSubscription->productId)
-                ->validateSubscription();
+            $this->googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
+            $this->googlePlayValidator->setPackageName($purchaseSubscription->packageName);
+            $this->googlePlayValidator->setPurchaseToken($purchaseSubscription->purchaseToken);
+            $this->googlePlayValidator->setProductId($purchaseSubscription->productId);
+            $gSubscription = $this->googlePlayValidator->validateSubscription();
         } catch (\Exception | \GuzzleHttp\Exception\GuzzleException | \Google_Exception $e) {
             Debugger::log("Unable to validate Google Play payment. Error: [{$e->getMessage()}]", Debugger::ERROR);
 
@@ -503,5 +502,10 @@ class VerifyPurchaseApiHandler extends ApiHandler
             // TODO: shouldn't we throw an exception here? or return special error to the app?
             Debugger::log("No device token found. Unable to pair new unclaimed user [{$user->id}].", Debugger::ERROR);
         }
+    }
+
+    public function setGooglePlayValidator(Validator $googlePlayValidator): void
+    {
+        $this->googlePlayValidator = $googlePlayValidator;
     }
 }
