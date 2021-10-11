@@ -5,7 +5,7 @@ namespace Crm\GooglePlayBillingModule\Repository;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Repository;
 use Crm\ApplicationModule\Repository\AuditLogRepository;
-use Nette\Database\Context;
+use Nette\Database\Explorer;
 use Nette\Database\Table\ActiveRow;
 use Nette\Database\Table\IRow;
 use Nette\Utils\DateTime;
@@ -59,7 +59,7 @@ class DeveloperNotificationsRepository extends Repository
     ];
 
     public function __construct(
-        Context $database,
+        Explorer $database,
         AuditLogRepository $auditLogRepository,
         Emitter $hermesEmitter
     ) {
