@@ -94,6 +94,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             // following notification types will create payment with subscription
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED:
+            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RECOVERED:
                 try {
                     $this->createPayment($gSubscription, $developerNotification);
 
@@ -141,7 +142,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 break;
 
             // following notification types do not affect existing subscriptions or payments in CRM
-            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RECOVERED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_ON_HOLD:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_IN_GRACE_PERIOD:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED:
