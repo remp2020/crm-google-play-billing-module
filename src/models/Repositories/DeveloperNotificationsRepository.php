@@ -90,8 +90,8 @@ class DeveloperNotificationsRepository extends Repository
             'event_time' => $eventTime,
             'notification_type' => $notificationType,
             'status' => $status,
-            'created_at' => new \DateTime(),
-            'modified_at' => new \DateTime(),
+            'created_at' => new DateTime(),
+            'modified_at' => new DateTime(),
         ]);
 
         if ($developerNotification instanceof IRow) {
@@ -111,6 +111,9 @@ class DeveloperNotificationsRepository extends Repository
 
     public function updateStatus(ActiveRow $developerNotification, string $status)
     {
-        return $this->update($developerNotification, ['status' => $status]);
+        return $this->update($developerNotification, [
+            'status' => $status,
+            'modified_at' => new DateTime(),
+        ]);
     }
 }

@@ -5,12 +5,14 @@ namespace Crm\GooglePlayBillingModule;
 use Crm\ApiModule\Api\ApiRoutersContainerInterface;
 use Crm\ApiModule\Router\ApiIdentifier;
 use Crm\ApiModule\Router\ApiRoute;
+use Crm\ApplicationModule\Commands\CommandsContainerInterface;
 use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\SeederManager;
 use Crm\ApplicationModule\User\UserDataRegistrator;
 use Crm\ApplicationModule\Widget\WidgetManagerInterface;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
+use Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
 use League\Event\Emitter;
 use Tomaj\Hermes\Dispatcher;
@@ -40,6 +42,11 @@ class GooglePlayBillingModule extends CrmModule
                 UserTokenAuthorization::class
             )
         );
+    }
+
+    public function registerCommands(CommandsContainerInterface $commandsContainer)
+    {
+        $commandsContainer->registerCommand($this->getInstance(RevalidateDeveloperNotificationCommand::class));
     }
 
     public function registerHermesHandlers(Dispatcher $dispatcher)

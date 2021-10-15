@@ -67,6 +67,12 @@ In case you need to link CRM user with app user in different way, you can overri
 subscriptionResponseProcessor: Crm\FooModule\GoogleBillingSubscriptionResponse\MyFooBarSubscriptionResponseProcessor
 ```
 
+## Commands
+
+### `google:revalidate-developer-notification`
+
+Command serves to revalidate developer notification against Google Billing service.
+
 ## Support
 
 - Google Play Developer API version 3 is supported.
