@@ -3,13 +3,13 @@
 namespace Crm\GooglePlayBillingModule\Repository;
 
 use Crm\ApplicationModule\Repository;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 class PurchaseDeviceTokensRepository extends Repository
 {
     protected $tableName = 'google_play_billing_purchase_device_tokens';
 
-    final public function add(IRow $purchaseToken, IRow $deviceToken)
+    final public function add(ActiveRow $purchaseToken, ActiveRow $deviceToken)
     {
         $payload = [
             'purchase_token_id' => $purchaseToken->id,

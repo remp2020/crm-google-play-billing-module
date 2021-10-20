@@ -26,7 +26,6 @@ use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Crm\UsersModule\User\UnclaimedUser;
 use Nette\Database\Table\ActiveRow;
-use Nette\Database\Table\IRow;
 use Nette\Http\Response;
 use Nette\Utils\Json;
 use Nette\Utils\Random;
@@ -329,7 +328,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private function getUser(
         UserTokenAuthorization $authorization,
         SubscriptionResponse $subscriptionResponse,
-        IRow $purchaseTokenRow
+        ActiveRow $purchaseTokenRow
     ) {
         $user = null;
 
@@ -463,7 +462,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $googleAcknowledger->acknowledge();
     }
 
-    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, $user, $purchaseTokenRow)
+    private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, ActiveRow $user, ActiveRow $purchaseTokenRow)
     {
         // pair new unclaimed user with device token from authorization
         $deviceToken = null;

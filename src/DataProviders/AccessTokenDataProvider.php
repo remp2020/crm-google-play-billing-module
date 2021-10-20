@@ -4,11 +4,11 @@ namespace Crm\GooglePlayBillingModule\DataProviders;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\UsersModule\DataProvider\AccessTokenDataProviderInterface;
-use Nette\Database\Table\IRow;
+use Nette\Database\Table\ActiveRow;
 
 class AccessTokenDataProvider implements AccessTokenDataProviderInterface
 {
-    public function canUnpairDeviceToken(IRow $accessToken, IRow $deviceToken): bool
+    public function canUnpairDeviceToken(ActiveRow $accessToken, ActiveRow $deviceToken): bool
     {
         if ($accessToken->source === GooglePlayBillingModule::USER_SOURCE_APP) {
             return false;

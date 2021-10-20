@@ -7,7 +7,6 @@ use Crm\ApplicationModule\Repository;
 use Crm\ApplicationModule\Repository\AuditLogRepository;
 use Nette\Database\Explorer;
 use Nette\Database\Table\ActiveRow;
-use Nette\Database\Table\IRow;
 use Nette\Utils\DateTime;
 use Tomaj\Hermes\Emitter;
 
@@ -70,10 +69,10 @@ class DeveloperNotificationsRepository extends Repository
     }
 
     /**
-     * @return bool|int|IRow
+     * @return bool|int|ActiveRow
      */
     public function add(
-        IRow $purchaseToken,
+        ActiveRow $purchaseToken,
         DateTime $eventTime,
         int $notificationType,
         string $status = self::STATUS_NEW
@@ -94,7 +93,7 @@ class DeveloperNotificationsRepository extends Repository
             'modified_at' => new DateTime(),
         ]);
 
-        if ($developerNotification instanceof IRow) {
+        if ($developerNotification instanceof ActiveRow) {
             $this->hermesEmitter->emit(new HermesMessage(
                 'developer-notification-received',
                 [
