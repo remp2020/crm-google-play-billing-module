@@ -14,7 +14,7 @@ use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Exception;
-use Nette\Localization\ITranslator;
+use Nette\Localization\Translator;
 use ReceiptValidator\GooglePlay\Validator;
 
 class GooglePlayUserDataProvider implements UserDataProviderInterface
@@ -46,7 +46,7 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
         SubscriptionsRepository $subscriptionsRepository,
         SubscriptionMetaRepository $subscriptionMetaRepository,
         PurchaseTokensRepository $purchaseTokensRepository,
-        ITranslator $translator
+        Translator $translator
     ) {
         $this->translator = $translator;
         $this->googlePlayValidatorFactory = $googlePlayValidatorFactory;
