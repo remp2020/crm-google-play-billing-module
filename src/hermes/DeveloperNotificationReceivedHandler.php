@@ -201,6 +201,17 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             return $paymentOrder->payment;
         }
 
+        $subscription = $this->subscriptionMetaRepository->findSubscriptionBy(
+            GooglePlayBillingModule::META_KEY_ORDER_ID,
+            $subscriptionResponse->getRawResponse()->getOrderId()
+        );
+        
+        if ($subscription) {
+            // free trial exists for given SubscriptionResponse,
+            // do not create payment
+            return null;
+        }
+
         $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
 
         if (!in_array($subscriptionResponse->getPaymentState(), [
