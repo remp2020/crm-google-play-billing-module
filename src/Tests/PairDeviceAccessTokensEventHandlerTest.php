@@ -64,6 +64,16 @@ class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
         );
     }
 
+    protected function tearDown(): void
+    {
+        $this->emitter->removeListener(
+            PairDeviceAccessTokensEvent::class,
+            $this->inject(PairDeviceAccessTokensEventHandler::class)
+        );
+
+        parent::tearDown();
+    }
+
     public function testNoUnclaimedUserPairing()
     {
         $deviceToken = $this->deviceTokensRepository->generate('foo');

@@ -100,6 +100,16 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         );
     }
 
+    protected function tearDown(): void
+    {
+        $this->emitter->removeListener(
+            RemovedAccessTokenEvent::class,
+            $this->inject(RemovedAccessTokenEventHandler::class)
+        );
+
+        parent::tearDown();
+    }
+
     public function testRegularSignOut()
     {
         // login user
