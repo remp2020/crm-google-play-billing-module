@@ -6,8 +6,8 @@ use Crm\PaymentsModule\Gateways\GatewayAbstract;
 
 class GooglePlayBilling extends GatewayAbstract
 {
-    const GATEWAY_CODE = 'google_play_billing';
-    const GATEWAY_NAME = 'Google Play Billing';
+    public const GATEWAY_CODE = 'google_play_billing';
+    public const GATEWAY_NAME = 'Google Play Billing';
 
     public function isSuccessful(): bool
     {
