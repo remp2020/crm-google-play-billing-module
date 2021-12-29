@@ -11,6 +11,8 @@ use Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
+use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Exception;
 use Nette\Localization\ITranslator;
 use ReceiptValidator\GooglePlay\Validator;
@@ -28,6 +30,10 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
 
     private $paymentMetaRepository;
 
+    private $subscriptionsRepository;
+
+    private $subscriptionMetaRepository;
+
     private $purchaseTokensRepository;
 
     private $configsRepository;
@@ -37,6 +43,8 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
         GooglePlayValidatorFactory $googlePlayValidatorFactory,
         PaymentsRepository $paymentsRepository,
         PaymentMetaRepository $paymentMetaRepository,
+        SubscriptionsRepository $subscriptionsRepository,
+        SubscriptionMetaRepository $subscriptionMetaRepository,
         PurchaseTokensRepository $purchaseTokensRepository,
         ITranslator $translator
     ) {
@@ -44,6 +52,8 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
         $this->googlePlayValidatorFactory = $googlePlayValidatorFactory;
         $this->paymentsRepository = $paymentsRepository;
         $this->paymentMetaRepository = $paymentMetaRepository;
+        $this->subscriptionsRepository = $subscriptionsRepository;
+        $this->subscriptionMetaRepository = $subscriptionMetaRepository;
         $this->purchaseTokensRepository = $purchaseTokensRepository;
         $this->configsRepository = $configsRepository;
     }
@@ -70,7 +80,34 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
 
     public function delete($userId, $protectedData = [])
     {
-        return [];
+        $metaKeys = [
+            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+            GooglePlayBillingModule::META_KEY_ORDER_ID,
+            GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID,
+        ];
+        $userPayments = $this->paymentsRepository->userPayments($userId);
+        if ($userPayments) {
+            foreach ($userPayments as $userPayment) {
+                foreach ($metaKeys as $key => $value) {
+                    $row = $this->paymentMetaRepository->findByPaymentAndKey($userPayment, $value);
+                    if ($row) {
+                        $this->paymentMetaRepository->delete($row);
+                    }
+                }
+            }
+        }
+
+        $userSubscriptions = $this->subscriptionsRepository->userSubscriptions($userId);
+        if ($userSubscriptions) {
+            foreach ($userSubscriptions as $userSubscription) {
+                foreach ($metaKeys as $key => $value) {
+                    $row = $this->subscriptionMetaRepository->findBySubscriptionAndKey($userSubscription, $value);
+                    if ($row) {
+                        $this->subscriptionMetaRepository->delete($row);
+                    }
+                }
+            }
+        }
     }
 
     public function protect($userId): array
