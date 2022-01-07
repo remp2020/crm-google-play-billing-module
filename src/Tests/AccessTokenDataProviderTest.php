@@ -99,6 +99,6 @@ class AccessTokenDataProviderTest extends DatabaseTestCase
 
     private function getUser()
     {
-        return $this->usersRepository->add('user_' . Random::generate() . '@example.com', 'secret', '', '');
+        return $this->usersRepository->add('user_' . Random::generate() . '@example.com', 'secret');
     }
 }
