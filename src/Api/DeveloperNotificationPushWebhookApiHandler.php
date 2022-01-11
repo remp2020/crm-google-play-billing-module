@@ -29,7 +29,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         $this->purchaseTokensRepository = $purchaseTokensRepository;
     }
 
-    public function params()
+    public function params(): array
     {
         return [];
     }

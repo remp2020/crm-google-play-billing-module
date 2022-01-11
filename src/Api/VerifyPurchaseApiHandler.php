@@ -88,7 +88,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $this->purchaseDeviceTokensRepository = $purchaseDeviceTokensRepository;
     }
 
-    public function params()
+    public function params(): array
     {
         return [];
     }
