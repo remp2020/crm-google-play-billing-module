@@ -5,7 +5,7 @@ namespace Crm\GooglePlayBillingModule\Api;
 use Crm\ApiModule\Api\ApiHandler;
 use Crm\ApiModule\Api\JsonResponse;
 use Crm\ApiModule\Api\JsonValidationTrait;
-use Crm\ApiModule\Authorization\ApiAuthorizationInterface;
+use Crm\ApiModule\Response\ApiResponseInterface;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
@@ -93,7 +93,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         return [];
     }
 
-    public function handle(ApiAuthorizationInterface $authorization)
+    public function handle(array $params): ApiResponseInterface
     {
         if (!($authorization instanceof UserTokenAuthorization)) {
             throw new \Exception("Wrong authorization service used. Should be 'UserTokenAuthorization'");

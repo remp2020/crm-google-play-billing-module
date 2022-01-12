@@ -5,7 +5,7 @@ namespace Crm\GooglePlayBillingModule\Api;
 use Crm\ApiModule\Api\ApiHandler;
 use Crm\ApiModule\Api\JsonResponse;
 use Crm\ApiModule\Api\JsonValidationTrait;
-use Crm\ApiModule\Authorization\ApiAuthorizationInterface;
+use Crm\ApiModule\Response\ApiResponseInterface;
 use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Nette\Http\Response;
@@ -34,7 +34,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         return [];
     }
 
-    public function handle(ApiAuthorizationInterface $authorization)
+    public function handle(array $params): ApiResponseInterface
     {
         // get DeveloperNotification data from google pub/sub message
         try {
