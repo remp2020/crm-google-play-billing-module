@@ -95,6 +95,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
     public function handle(array $params): ApiResponseInterface
     {
+        $authorization = $this->getAuthorization();
         if (!($authorization instanceof UserTokenAuthorization)) {
             throw new \Exception("Wrong authorization service used. Should be 'UserTokenAuthorization'");
         }
