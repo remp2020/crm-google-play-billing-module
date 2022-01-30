@@ -113,7 +113,7 @@ class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
 
     private function getClaimedUser()
     {
-        return $this->usersRepository->add(self::CLAIMED_LOGIN, 'secret', '', '');
+        return $this->usersRepository->add(self::CLAIMED_LOGIN, 'secret');
     }
 
     private function getUnclaimedUser()

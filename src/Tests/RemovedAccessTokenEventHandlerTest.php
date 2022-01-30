@@ -242,8 +242,9 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
     protected function getUser($id)
     {
         if (!isset($this->users[$id])) {
+            /** @var UsersRepository $usersRepository */
             $usersRepository = $this->getRepository(UsersRepository::class);
-            $this->users[$id] = $usersRepository->add('asfsaoihf@afasf.sk', 'q039uewt', '', '', '', 1);
+            $this->users[$id] = $usersRepository->add('asfsaoihf@afasf.sk', 'q039uewt');
         }
         return $this->users[$id];
     }
