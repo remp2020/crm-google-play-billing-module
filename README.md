@@ -1,10 +1,6 @@
 # Google Play Billing Module
 
----
-
-_**WARNING: This is experimental WIP module. We do not recommend using this module in production.**_
-
----
+[![Translation status @ Weblate](https://hosted.weblate.org/widgets/remp-crm/-/google_play_billing-module/svg-badge.svg)](https://hosted.weblate.org/projects/remp-crm/google_play_billing-module/)
 
 ## Installation
 
