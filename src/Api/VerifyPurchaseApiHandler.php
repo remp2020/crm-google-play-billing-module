@@ -3,9 +3,7 @@
 namespace Crm\GooglePlayBillingModule\Api;
 
 use Crm\ApiModule\Api\ApiHandler;
-use Crm\ApiModule\Api\JsonResponse;
 use Crm\ApiModule\Api\JsonValidationTrait;
-use Crm\ApiModule\Response\ApiResponseInterface;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
@@ -25,6 +23,7 @@ use Crm\UsersModule\Repository\AccessTokensRepository;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Crm\UsersModule\User\UnclaimedUser;
+use GuzzleHttp\Exception\GuzzleException;
 use Nette\Database\Table\ActiveRow;
 use Nette\Http\Response;
 use Nette\Utils\Json;
@@ -32,6 +31,8 @@ use Nette\Utils\Random;
 use ReceiptValidator\GooglePlay\Acknowledger;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
 use ReceiptValidator\GooglePlay\Validator;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 use Tracy\Debugger;
 
 class VerifyPurchaseApiHandler extends ApiHandler
@@ -93,7 +94,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         return [];
     }
 
-    public function handle(array $params): ApiResponseInterface
+    public function handle(array $params): ResponseInterface
     {
         $authorization = $this->getAuthorization();
         if (!($authorization instanceof UserTokenAuthorization)) {
@@ -122,7 +123,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $purchaseSubscription,
             $purchaseTokenRow
         );
-        if ($subscriptionOrResponse instanceof JsonResponse) {
+        if ($subscriptionOrResponse instanceof JsonApiResponse) {
             return $subscriptionOrResponse;
         }
         /** @var SubscriptionResponse $subscriptionResponse */
@@ -130,7 +131,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
         // load user (from token or receipt)
         $userOrResponse = $this->getUser($authorization, $subscriptionResponse, $purchaseTokenRow);
-        if ($userOrResponse instanceof JsonResponse) {
+        if ($userOrResponse instanceof JsonApiResponse) {
             return $userOrResponse;
         }
         /** @var ActiveRow $user */
@@ -145,7 +146,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     }
 
     /**
-     * @return JsonResponse|SubscriptionResponse - Return validated subscription (SubscriptionResponse) or JsonResponse which should be returned by API.
+     * @return JsonApiResponse|SubscriptionResponse - Return validated subscription (SubscriptionResponse) or JsonResponse which should be returned by API.
      */
     private function verifyGooglePlayBillingPurchaseSubscription(
         UserTokenAuthorization $authorization,
@@ -158,15 +159,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $this->googlePlayValidator->setPurchaseToken($purchaseSubscription->purchaseToken);
             $this->googlePlayValidator->setProductId($purchaseSubscription->productId);
             $gSubscription = $this->googlePlayValidator->validateSubscription();
-        } catch (\Exception | \GuzzleHttp\Exception\GuzzleException | \Google_Exception $e) {
+        } catch (\Exception | GuzzleException | \Google_Exception $e) {
             Debugger::log("Unable to validate Google Play payment. Error: [{$e->getMessage()}]", Debugger::ERROR);
 
-            $response = new JsonResponse([
+            $response = new JsonApiResponse(Response::S503_SERVICE_UNAVAILABLE, [
                 'status' => 'error',
                 'code' => 'unable_to_validate',
                 'message' => 'Unable to validate Google Play payment.',
             ]);
-            $response->setHttpCode(Response::S503_SERVICE_UNAVAILABLE);
             return $response;
         }
 
@@ -175,12 +175,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
         ])) {
-            $response = new JsonResponse([
+            $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [
                 'status' => 'error',
                 'code' => 'payment_not_confirmed',
                 'message' => 'Payment is not confirmed by Google yet.',
             ]);
-            $response->setHttpCode(Response::S400_BAD_REQUEST);
             return $response;
         }
 
@@ -200,12 +199,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 $purchaseTokenRow
             );
 
-            $response = new JsonResponse([
+            $response = new JsonApiResponse(Response::S200_OK, [
                 'status' => 'ok',
                 'code' => 'success_already_created',
                 'message' => "Google Play purchase verified (transaction was already processed).",
             ]);
-            $response->setHttpCode(Response::S200_OK);
             return $response;
         }
 
@@ -217,7 +215,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         SubscriptionResponse $subscriptionResponse,
         ActiveRow $purchaseTokenRow,
         ?string $articleID
-    ): JsonResponse {
+    ): JsonApiResponse {
         // validate subscription type
         $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($purchaseTokenRow->subscription_id);
         if (!$googlePlaySubscriptionType) {
@@ -225,12 +223,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 "Unable to find SubscriptionType for Google Play product ID [{$purchaseTokenRow->subscription_id}].",
                 Debugger::ERROR
             );
-            $response = new JsonResponse([
+            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, [
                 'status' => 'error',
                 'code' => 'missing_subscription_type',
                 'message' => 'Unable to find SubscriptionType for Google Play product ID.',
             ]);
-            $response->setHttpCode(Response::S500_INTERNAL_SERVER_ERROR);
             return $response;
         }
         $subscriptionType = $googlePlaySubscriptionType->subscription_type;
@@ -243,12 +240,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 "Unable to find PaymentGateway with code [{$paymentGatewayCode}]. Is GooglePlayBillingModule enabled?",
                 Debugger::ERROR
             );
-            $response = new JsonResponse([
+            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, [
                 'status' => 'error',
                 'code' => 'internal_server_error',
                 'message' => "Unable to find PaymentGateway with code [{$paymentGatewayCode}].",
             ]);
-            $response->setHttpCode(Response::S500_INTERNAL_SERVER_ERROR);
             return $response;
         }
 
@@ -277,12 +273,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 $this->acknowledge($purchaseTokenRow);
             }
 
-            $response = new JsonResponse([
+            $response = new JsonApiResponse(Response::S200_OK, [
                 'status' => 'ok',
                 'code' => 'success_trial',
                 'message' => "Google Play purchase verified (trial created).",
             ]);
-            $response->setHttpCode(Response::S200_OK);
             return $response;
         }
 
@@ -314,17 +309,16 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $this->acknowledge($purchaseTokenRow);
         }
 
-        $response = new JsonResponse([
+        $response = new JsonApiResponse(Response::S200_OK, [
             'status' => 'ok',
             'code' => 'success',
             'message' => "Google Play purchase verified.",
         ]);
-        $response->setHttpCode(Response::S200_OK);
         return $response;
     }
 
     /**
-     * @return ActiveRow|JsonResponse - Return $user (ActiveRow) or JsonResponse which should be returnd by API.
+     * @return ActiveRow|JsonApiResponse - Return $user (ActiveRow) or JsonResponse which should be returnd by API.
      */
     private function getUser(
         UserTokenAuthorization $authorization,
@@ -379,12 +373,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
                             $user = $userFromSubscriptionResponse;
                         }
                     } else {
-                        $response = new JsonResponse([
+                        $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [
                             'status' => 'error',
                             'code' => 'purchase_already_owned',
                             'message' => "Unable to verify purchase for user [$userFromToken->public_name]. This or previous purchase already owned by other user.",
                         ]);
-                        $response->setHttpCode(Response::S400_BAD_REQUEST);
                         return $response;
                     }
                 } else {

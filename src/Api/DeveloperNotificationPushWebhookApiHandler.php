@@ -3,14 +3,14 @@
 namespace Crm\GooglePlayBillingModule\Api;
 
 use Crm\ApiModule\Api\ApiHandler;
-use Crm\ApiModule\Api\JsonResponse;
 use Crm\ApiModule\Api\JsonValidationTrait;
-use Crm\ApiModule\Response\ApiResponseInterface;
 use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Nette\Http\Response;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;
+use Tomaj\NetteApi\Response\JsonApiResponse;
+use Tomaj\NetteApi\Response\ResponseInterface;
 use Tracy\Debugger;
 
 class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
@@ -34,7 +34,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         return [];
     }
 
-    public function handle(array $params): ApiResponseInterface
+    public function handle(array $params): ResponseInterface
     {
         // get DeveloperNotification data from google pub/sub message
         try {
@@ -91,15 +91,14 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             DeveloperNotificationsRepository::STATUS_NEW
         );
 
-        $response = new JsonResponse([
+        $response = new JsonApiResponse(Response::S200_OK, [
             'status' => 'ok',
             'result' => 'Developer Notification acknowledged.',
             ]);
-        $response->setHttpCode(Response::S200_OK);
         return $response;
     }
 
-    private function logAndReturnPayloadError(string $errorMessage): JsonResponse
+    private function logAndReturnPayloadError(string $errorMessage): JsonApiResponse
     {
         // log as error; google probably changed payload
         Debugger::log(
@@ -107,12 +106,11 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             Debugger::ERROR
         );
 
-        $response = new JsonResponse([
+        $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [
             'status' => 'error',
             'message' => 'Payload error',
             'errors' => [ $errorMessage ],
         ]);
-        $response->setHttpCode(Response::S400_BAD_REQUEST);
         return $response;
     }
 }
