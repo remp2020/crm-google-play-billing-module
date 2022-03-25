@@ -146,7 +146,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     }
 
     /**
-     * @return JsonApiResponse|SubscriptionResponse - Return validated subscription (SubscriptionResponse) or JsonResponse which should be returned by API.
+     * @return JsonApiResponse|SubscriptionResponse - Return validated subscription (SubscriptionResponse) or JsonApiResponse which should be returned by API.
      */
     private function verifyGooglePlayBillingPurchaseSubscription(
         UserTokenAuthorization $authorization,
@@ -318,7 +318,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     }
 
     /**
-     * @return ActiveRow|JsonApiResponse - Return $user (ActiveRow) or JsonResponse which should be returnd by API.
+     * @return ActiveRow|JsonApiResponse - Return $user (ActiveRow) or JsonApiResponse which should be returned by API.
      */
     private function getUser(
         UserTokenAuthorization $authorization,
