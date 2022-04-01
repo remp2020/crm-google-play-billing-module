@@ -243,8 +243,6 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         }
 
         $recurrentCharge = false;
-        $paymentItemContainer = (new PaymentItemContainer())
-            ->addItems(SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType));
 
         // check if any payment with same purchase token was created & load data from it; set recurrent charge to true
         $paymentWithPurchaseToken = $this->paymentsRepository->getTable()
@@ -269,7 +267,16 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             // we will set start of new subscription same as end of previous subscription
             $subscriptionStartAt = $paymentWithPurchaseToken->subscription_end_at;
             $recurrentCharge = true;
+
+            // Handle case when first subscription type is different from renewals.
+            // Note: currently, this only handles Introductory price (in Google console) of "Single payment" type, not "Recurring payment" type.
+            if ($subscriptionType->next_subscription_type_id) {
+                $subscriptionType = $subscriptionType->next_subscription_type;
+            }
         }
+
+        $paymentItemContainer = (new PaymentItemContainer())
+            ->addItems(SubscriptionTypePaymentItem::fromSubscriptionType($subscriptionType));
 
         $payment = $this->paymentsRepository->add(
             $subscriptionType,
