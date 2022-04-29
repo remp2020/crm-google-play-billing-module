@@ -130,7 +130,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $subscriptionResponse = $subscriptionOrResponse;
 
         // load user (from token or receipt)
-        $userOrResponse = $this->getUser($authorization, $subscriptionResponse, $purchaseTokenRow);
+        $userOrResponse = $this->getUser($authorization, $subscriptionResponse, $purchaseTokenRow, $payload->locale ?? null);
         if ($userOrResponse instanceof JsonApiResponse) {
             return $userOrResponse;
         }
@@ -323,7 +323,8 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private function getUser(
         UserTokenAuthorization $authorization,
         SubscriptionResponse $subscriptionResponse,
-        ActiveRow $purchaseTokenRow
+        ActiveRow $purchaseTokenRow,
+        string $locale = null
     ) {
         $user = null;
 
@@ -391,7 +392,8 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $rand = Random::generate();
             $user = $this->unclaimedUser->createUnclaimedUser(
                 "google_play_billing_{$rand}",
-                GooglePlayBillingModule::USER_SOURCE_APP
+                GooglePlayBillingModule::USER_SOURCE_APP,
+                $locale
             );
         }
 

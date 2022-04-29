@@ -14,6 +14,9 @@
         },
         "articleId": {
             "type": "string"
+        },
+        "locale": {
+            "type": "string"
         }
     },
     "definitions": {
