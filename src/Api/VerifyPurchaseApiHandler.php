@@ -23,6 +23,7 @@ use Crm\UsersModule\Repository\AccessTokensRepository;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Crm\UsersModule\User\UnclaimedUser;
+use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\GuzzleException;
 use Nette\Database\Table\ActiveRow;
 use Nette\Http\Response;
@@ -31,6 +32,7 @@ use Nette\Utils\Random;
 use ReceiptValidator\GooglePlay\Acknowledger;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
 use ReceiptValidator\GooglePlay\Validator;
+use ReceiptValidator\RunTimeException;
 use Tomaj\NetteApi\Response\JsonApiResponse;
 use Tomaj\NetteApi\Response\ResponseInterface;
 use Tracy\Debugger;
@@ -455,7 +457,20 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $purchaseTokenRow->subscription_id,
             $purchaseTokenRow->purchase_token
         );
-        $googleAcknowledger->acknowledge();
+
+        try {
+            $googleAcknowledger->acknowledge();
+        } catch (RunTimeException $e) {
+            // Catch & ignore concurrent update.
+            // Slow network or hermes processing could trigger duplicated call to acknowledge purchase.
+            // Worst case scenario is Google sending developer notification again (which we'll process & acknowledge).
+            if ($e->getPrevious() instanceof GoogleServiceException &&
+                $e->getPrevious()->getErrors()[0]['reason'] === 'concurrentUpdate'
+            ) {
+                return;
+            }
+            throw $e;
+        }
     }
 
     private function pairUserWithAuthorizedToken(UserTokenAuthorization $authorization, ActiveRow $user, ActiveRow $purchaseTokenRow)
