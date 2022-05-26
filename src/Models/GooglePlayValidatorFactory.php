@@ -3,8 +3,8 @@
 namespace Crm\GooglePlayBillingModule\Model;
 
 use Crm\ApplicationModule\Config\ApplicationConfig;
-use Google_Client;
-use Google_Service_AndroidPublisher;
+use Google\Client;
+use Google\Service\AndroidPublisher;
 use ReceiptValidator\GooglePlay\Validator;
 
 class GooglePlayValidatorFactory
@@ -29,11 +29,11 @@ class GooglePlayValidatorFactory
             throw new \Exception('Missing application configuration [google_play_billing_service_account_credentials_json].');
         }
 
-        $client = new Google_Client();
+        $client = new Client();
         $client->setApplicationName($applicationName);
         $client->setAuthConfig($credentialsFile);
-        $client->addScope(Google_Service_AndroidPublisher::ANDROIDPUBLISHER);
+        $client->addScope(AndroidPublisher::ANDROIDPUBLISHER);
 
-        return new Validator(new Google_Service_AndroidPublisher($client));
+        return new Validator(new AndroidPublisher($client));
     }
 }
