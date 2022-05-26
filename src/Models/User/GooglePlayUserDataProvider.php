@@ -63,9 +63,9 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
         return 'google_play';
     }
 
-    public function data($userId)
+    public function data($userId): ?array
     {
-        return [];
+        return null;
     }
 
     public function download($userId)
