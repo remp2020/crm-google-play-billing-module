@@ -120,6 +120,8 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
             // following notification types do not affect existing subscriptions or payments
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED:
+                // temporary log for debugging & testing
+                Debugger::log("Nothing done with DeveloperNotification ID: [{$developerNotification->id}]. Reason: [Notification type 13 - SUBSCRIPTION_EXPIRED not handled.]", self::INFO_LOG_LEVEL);
                 break;
 
             // handle cancelled and revoked subscriptions
@@ -205,7 +207,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             GooglePlayBillingModule::META_KEY_ORDER_ID,
             $subscriptionResponse->getRawResponse()->getOrderId()
         );
-        
+
         if ($subscription) {
             // free trial exists for given SubscriptionResponse,
             // do not create payment
