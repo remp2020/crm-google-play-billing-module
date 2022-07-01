@@ -413,10 +413,13 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
     public function processCancelReason(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): array
     {
         $cancelData = [];
-        $cancelData['cancel_datetime'] = $this->subscriptionResponseProcessor->getUserCancellationTime($subscriptionResponse)->format('Y-m-d H:i:s');
         switch ($subscriptionResponse->getCancelReason()) {
             case 0:
                 $cancelData['cancel_reason'] = 'cancelled_by_user';
+                $userCancellationTime = $this->subscriptionResponseProcessor->getUserCancellationTime($subscriptionResponse);
+                if ($userCancellationTime !== null) {
+                    $cancelData['cancel_datetime'] = $userCancellationTime->format('Y-m-d H:i:s');
+                }
                 $cancelSurveyResult = $subscriptionResponse->getRawResponse()->getCancelSurveyResult();
                 if ($cancelSurveyResult && $cancelSurveyResult->getCancelSurveyReason()) {
                     switch ($cancelSurveyResult->getCancelSurveyReason()) {

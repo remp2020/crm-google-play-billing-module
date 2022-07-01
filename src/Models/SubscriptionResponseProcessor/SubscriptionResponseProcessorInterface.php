@@ -45,5 +45,5 @@ interface SubscriptionResponseProcessorInterface
      * We recommend using SubscriptionResponseDateTimesTrait which converts Google's timestamp
      * with milliseconds to DateTime with system Timezone.
      */
-    public function getUserCancellationTime(SubscriptionResponse $subscriptionResponse): DateTime;
+    public function getUserCancellationTime(SubscriptionResponse $subscriptionResponse): ?DateTime;
 }

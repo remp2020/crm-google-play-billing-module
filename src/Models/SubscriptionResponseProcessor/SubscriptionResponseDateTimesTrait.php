@@ -23,8 +23,12 @@ trait SubscriptionResponseDateTimesTrait
         return $subscriptionEndAt;
     }
 
-    public function getUserCancellationTime(SubscriptionResponse $subscriptionResponse): DateTime
+    public function getUserCancellationTime(SubscriptionResponse $subscriptionResponse): ?DateTime
     {
+        if ($subscriptionResponse->getUserCancellationTimeMillis() === null) {
+            return null;
+        }
+
         $userCancellationTimeMicros = sprintf("%.6f", $subscriptionResponse->getUserCancellationTimeMillis() / 1000);
         $userCancellationTime = DateTime::createFromFormat("U.u", $userCancellationTimeMicros);
         $userCancellationTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
