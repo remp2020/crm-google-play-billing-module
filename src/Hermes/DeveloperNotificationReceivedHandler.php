@@ -118,13 +118,8 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 }
                 break;
 
-            // following notification types do not affect existing subscriptions or payments
+            // handle upgraded, cancelled and revoked subscriptions
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED:
-                // temporary log for debugging & testing
-                Debugger::log("Nothing done with DeveloperNotification ID: [{$developerNotification->id}]. Reason: [Notification type 13 - SUBSCRIPTION_EXPIRED not handled.]", self::INFO_LOG_LEVEL);
-                break;
-
-            // handle cancelled and revoked subscriptions
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED:
                 try {
@@ -256,18 +251,35 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             ->fetch();
 
         if ($paymentWithPurchaseToken && isset($paymentWithPurchaseToken->subscription_end_at)) {
-            // check if same payment wasn't created already by legacy API endpoint `verify-purchase`
-            if ($paymentWithPurchaseToken->subscription_end_at->format('Y-m-d H:i:s') === $subscriptionEndAt->format('Y-m-d H:i:s')) {
+            $paymentWithPurchaseTokenOrderId = $this->paymentMetaRepository->findByPaymentAndKey(
+                $paymentWithPurchaseToken,
+                GooglePlayBillingModule::META_KEY_ORDER_ID
+            );
+            $samePurchaseTokenAndOrderId = false;
+            if ($paymentWithPurchaseTokenOrderId !== null && $paymentWithPurchaseTokenOrderId->value === $subscriptionResponse->getRawResponse()->getOrderId()) {
+                $samePurchaseTokenAndOrderId = true;
+            }
+
+            // purchase with same order ID & same end datetime was already created (by previous notification or legacy API endpoint `verify-purchase`)
+            if ($samePurchaseTokenAndOrderId && $paymentWithPurchaseToken->subscription_end_at->format('Y-m-d H:i:s') === $subscriptionEndAt->format('Y-m-d H:i:s')) {
                 throw new DoNotRetryException("Payment with same purchase token and end datetime already exists.");
             }
 
-            if ($paymentWithPurchaseToken->subscription_end_at->format('Y-m-d H:i:s') > $subscriptionEndAt->format('Y-m-d H:i:s')) {
+            if ($samePurchaseTokenAndOrderId && $paymentWithPurchaseToken->subscription_end_at->format('Y-m-d H:i:s') > $subscriptionEndAt->format('Y-m-d H:i:s')) {
                 throw new DoNotRetryException("Future payment with same purchase token already exists.");
             }
 
-            // google returns in start time of renewed subscription datetime of purchase
-            // we will set start of new subscription same as end of previous subscription
-            $subscriptionStartAt = $paymentWithPurchaseToken->subscription_end_at;
+            // google returns in start time:
+            // - date of start for upgraded subscription (previous subscription from which upgrade was done can be still un-expired (google sends notifications in incorrect order))
+            //   - in this case we want to keep start time provided by google
+            //   - it has different order ID
+            // - date of purchase for renewed subscription
+            //   - in this case we want to start immediately after previous payment with same token
+            //   - it has same order ID
+            if ($samePurchaseTokenAndOrderId) {
+                $subscriptionStartAt = $paymentWithPurchaseToken->subscription_end_at;
+            }
+
             $recurrentCharge = true;
 
             // Handle case when first subscription type is different from renewals.

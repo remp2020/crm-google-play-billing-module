@@ -19,7 +19,7 @@ services:
 	- Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler
 	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
 	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)
-	- Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory
+	googlePlayValidatorFactory: Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory
 	- Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository
 	- Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository
 	- Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository
