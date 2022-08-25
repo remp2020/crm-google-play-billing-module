@@ -5,8 +5,8 @@
   "homepage": "https://remp2020.com",
   "license": "MIT",
   "require": {
-    "php": "^7.4",
-    "aporat/store-receipt-validator": "^3.4",
+    "php": "^8.0",
+    "aporat/store-receipt-validator": "^4.2",
     "google/apiclient": "^2.9"
   },
   "minimum-stability": "stable",
