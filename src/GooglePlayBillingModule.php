@@ -10,7 +10,7 @@ use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\SeederManager;
 use Crm\ApplicationModule\User\UserDataRegistrator;
-use Crm\ApplicationModule\Widget\WidgetManagerInterface;
+use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
 use Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
@@ -88,16 +88,16 @@ class GooglePlayBillingModule extends CrmModule
         );
     }
 
-    public function registerWidgets(WidgetManagerInterface $widgetManager)
+    public function registerLazyWidgets(LazyWidgetManagerInterface $widgetManager)
     {
         $widgetManager->registerWidget(
             'frontend.payments.listing.recurrent',
-            $this->getInstance(\Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class),
+            \Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class,
             100
         );
         $widgetManager->registerWidget(
             'payments.user_payments.listing.recurrent',
-            $this->getInstance(\Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class),
+            \Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget::class,
             100
         );
     }

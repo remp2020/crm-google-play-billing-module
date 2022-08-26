@@ -2,20 +2,12 @@
 
 namespace Crm\GooglePlayBillingModule\Components;
 
-use Crm\ApplicationModule\Widget\BaseWidget;
-use Crm\ApplicationModule\Widget\WidgetManager;
+use Crm\ApplicationModule\Widget\BaseLazyWidget;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 
-class StopRecurrentPaymentButtonWidget extends BaseWidget
+class StopRecurrentPaymentButtonWidget extends BaseLazyWidget
 {
     private $templateName = 'stop_recurrent_payment_info_widget.latte';
-
-
-    public function __construct(
-        WidgetManager $widgetManager
-    ) {
-        parent::__construct($widgetManager);
-    }
 
     public function identifier()
     {
