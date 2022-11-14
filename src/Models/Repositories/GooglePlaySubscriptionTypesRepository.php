@@ -9,11 +9,12 @@ class GooglePlaySubscriptionTypesRepository extends Repository
 {
     protected $tableName = 'google_play_billing_subscription_types';
 
-    final public function add(string $googlePlaySubscriptionId, ActiveRow $subscriptionType)
+    final public function add(string $googlePlaySubscriptionId, ActiveRow $subscriptionType, ?int $offerPeriods = null)
     {
         return $this->getTable()->insert([
             'subscription_id' => $googlePlaySubscriptionId,
             'subscription_type_id' => $subscriptionType->id,
+            'offer_periods' => $offerPeriods,
         ]);
     }
 

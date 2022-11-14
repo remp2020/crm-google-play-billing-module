@@ -20,6 +20,7 @@ use Nette\Utils\DateTime;
 use Psr\Log\LoggerAwareTrait;
 use ReceiptValidator\GooglePlay\Acknowledger;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
+use ReceiptValidator\GooglePlay\Validator;
 use Tomaj\Hermes\Handler\HandlerInterface;
 use Tomaj\Hermes\Handler\RetryTrait;
 use Tomaj\Hermes\MessageInterface;
@@ -32,44 +33,19 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
     public const INFO_LOG_LEVEL = 'google_developer_notifications';
 
-    private $developerNotificationsRepository;
-
-    private $googlePlaySubscriptionTypesRepository;
-
-    private $googlePlayValidatorFactory;
-
-    private $paymentGatewaysRepository;
-
-    private $paymentMetaRepository;
-
-    private $paymentsRepository;
-
-    private $subscriptionsRepository;
-
-    private $subscriptionMetaRepository;
-
-    private $subscriptionResponseProcessor;
+    private $googlePlayValidator;
 
     public function __construct(
-        SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
-        DeveloperNotificationsRepository $developerNotificationsRepository,
-        GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
-        GooglePlayValidatorFactory $googlePlayValidator,
-        PaymentGatewaysRepository $paymentGatewaysRepository,
-        PaymentMetaRepository $paymentMetaRepository,
-        PaymentsRepository $paymentsRepository,
-        SubscriptionsRepository $subscriptionsRepository,
-        SubscriptionMetaRepository $subscriptionMetaRepository
+        private SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
+        private DeveloperNotificationsRepository $developerNotificationsRepository,
+        private GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
+        private GooglePlayValidatorFactory $googlePlayValidatorFactory,
+        private PaymentGatewaysRepository $paymentGatewaysRepository,
+        private PaymentMetaRepository $paymentMetaRepository,
+        private PaymentsRepository $paymentsRepository,
+        private SubscriptionsRepository $subscriptionsRepository,
+        private SubscriptionMetaRepository $subscriptionMetaRepository
     ) {
-        $this->developerNotificationsRepository = $developerNotificationsRepository;
-        $this->googlePlaySubscriptionTypesRepository = $googlePlaySubscriptionTypesRepository;
-        $this->googlePlayValidatorFactory = $googlePlayValidator;
-        $this->paymentGatewaysRepository = $paymentGatewaysRepository;
-        $this->paymentMetaRepository = $paymentMetaRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->subscriptionsRepository = $subscriptionsRepository;
-        $this->subscriptionMetaRepository = $subscriptionMetaRepository;
-        $this->subscriptionResponseProcessor = $subscriptionResponseProcessor;
     }
 
     public function handle(MessageInterface $message): bool
@@ -83,7 +59,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         }
 
         // validate and load google subscription
-        $googlePlayValidator = $this->googlePlayValidatorFactory->create();
+        $googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
         $gSubscription = $googlePlayValidator
             ->setPackageName($developerNotification->package_name)
             ->setPurchaseToken($developerNotification->purchase_token)
@@ -165,6 +141,12 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             DeveloperNotificationsRepository::STATUS_PROCESSED
         );
         return true;
+    }
+
+    // Useful in tests
+    public function setGooglePlayValidator(Validator $googlePlayValidator): void
+    {
+        $this->googlePlayValidator = $googlePlayValidator;
     }
 
     private function developerNotification(MessageInterface $message): ActiveRow
@@ -282,10 +264,17 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
             $recurrentCharge = true;
 
-            // Handle case when first subscription type is different from renewals.
-            // Note: currently, this only handles Introductory price (in Google console) of "Single payment" type, not "Recurring payment" type.
+            // Handle case when introductory subscription type is different from renewals.
             if ($subscriptionType->next_subscription_type_id) {
-                $subscriptionType = $subscriptionType->next_subscription_type;
+                $googleSubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($developerNotification->subscription_id);
+                if ($googleSubscriptionType->offer_periods) {
+                    $usedOfferPeriods = $this->getUsedOfferPeriods($subscriptionResponse->getRawResponse()->getOrderId());
+                    if ($usedOfferPeriods >= $googleSubscriptionType->offer_periods) {
+                        $subscriptionType = $subscriptionType->next_subscription_type;
+                    }
+                } else {
+                    $subscriptionType = $subscriptionType->next_subscription_type;
+                }
             }
         }
 
@@ -472,5 +461,19 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         }
 
         return $cancelData;
+    }
+
+    private function getUsedOfferPeriods($orderId): int
+    {
+        $matches = [];
+        // Order ID for renewal payments ends with '..0', e.g. 'GPA.1111-1111-1111-11111..0'
+        preg_match('/\.\.(\d+)$/', $orderId, $matches);
+
+        if (isset($matches[1])) {
+            // Renewal starts from 0; first renewal order id ends with '..0'; initial payment has no sufix
+            return (int)$matches[1] + 1;
+        }
+
+        return 0;
     }
 }

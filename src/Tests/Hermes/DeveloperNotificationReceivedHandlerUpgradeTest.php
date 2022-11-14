@@ -5,7 +5,6 @@ namespace Crm\GooglePlayBillingModule\Tests\Hermes;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
-use Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository;
@@ -45,8 +44,6 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
     private ?ActiveRow $googlePlaySubscriptionTypeWeb = null;
     private ?ActiveRow $googlePlaySubscriptionTypeStandard = null;
     private ?ActiveRow $user = null;
-
-    private static GooglePlayValidatorFactory $googlePlayValidatorFactoryMocked;
 
     private DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler;
 
@@ -100,18 +97,15 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         ];
     }
 
-    public static function setUpBeforeClass(): void
-    {
-        self::$googlePlayValidatorFactoryMocked = Mockery::mock(GooglePlayValidatorFactory::class);
-    }
+    //public static function setUpBeforeClass(): void
+    //{
+    //    self::$googlePlayValidatorFactoryMocked = Mockery::mock(GooglePlayValidatorFactory::class);
+    //}
 
     public function setUp(): void
     {
         parent::setUp();
 
-        // switch google play validator factory to mocked one; this is used by DeveloperNotificationReceivedHandler
-        $this->container->removeService('googlePlayValidatorFactory');
-        $this->container->addService('googlePlayValidatorFactory', self::$googlePlayValidatorFactoryMocked);
         $this->developerNotificationReceivedHandler = $this->inject(DeveloperNotificationReceivedHandler::class);
 
         $this->developerNotificationsRepository = $this->getRepository(DeveloperNotificationsRepository::class);
@@ -174,7 +168,7 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         $startTimeMillisFirstPurchase = new DateTime('2030-04-27 19:20:57');
         $expiryTimeMillisFirstPurchase = new DateTime('2030-05-27 19:20:57');
         $priceAmountMicrosFirstPurchase = $this->getGooglePlaySubscriptionTypeWeb()->subscription_type->price * 1000000;
-        // acknowledgementState: 1 -> set to acknowledged so we don't need to mock acknowledgement service
+        // acknowledgementState: 1 -> set to acknowledged, so we don't need to mock acknowledgement service
         // autoRenewing: true -> first purchase set to create recurrent payment
         $googleResponseFirstPurchase = <<<JSON
 {
@@ -538,12 +532,7 @@ JSON;
                 Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY)
             )))
             ->getMock();
-
-        // set response into mock
-        self::$googlePlayValidatorFactoryMocked
-            ->shouldReceive('create')
-            ->andReturn($googlePlayValidatorMocked)
-            ->once();
+        $this->developerNotificationReceivedHandler->setGooglePlayValidator($googlePlayValidatorMocked);
     }
 
     private function getUser(): ActiveRow
