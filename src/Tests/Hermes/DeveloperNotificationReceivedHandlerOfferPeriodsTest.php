@@ -373,6 +373,8 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $subscriptionTypeCodeWeb = 'google_inapp_web';
 
         $subscriptionTypeWeb = $this->subscriptionTypesRepository->findByCode($subscriptionTypeCodeWeb);
+        $subscriptionTypeAfterOfferPeriods = $this->getSubscriptionTypeAfterOfferPeriods();
+
         if (!$subscriptionTypeWeb) {
             $subscriptionTypeWeb = $this->subscriptionTypeBuilder->createNew()
                 ->setName('Google Pay test subscription WEB month')
@@ -381,7 +383,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
                 ->setCode($subscriptionTypeCodeWeb)
                 ->setLength(31)
                 ->setActive(true)
-                ->setNextSubscriptionTypeIdFromCode($this->getSubscriptionTypeAfterOfferPeriods()->code)
+                ->setNextSubscriptionTypeIdFromCode($subscriptionTypeAfterOfferPeriods->code)
                 ->save();
         }
         $this->googlePlaySubscriptionTypeWeb = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($googlePlaySubscriptionIdWeb);
