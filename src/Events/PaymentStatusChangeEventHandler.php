@@ -3,6 +3,7 @@
 namespace Crm\GooglePlayBillingModule\Events;
 
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
+use Crm\PaymentsModule\Events\PaymentEventInterface;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use League\Event\AbstractListener;
@@ -24,6 +25,10 @@ class PaymentStatusChangeEventHandler extends AbstractListener
 
     public function handle(EventInterface $event)
     {
+        if (!$event instanceof PaymentEventInterface) {
+            throw new \Exception("Invalid type of event received, 'PaymentEventInterface' expected: " . get_class($event));
+        }
+
         $payment = $event->getPayment();
         // hard reload, other handlers could have altered the payment
         $payment = $this->paymentsRepository->find($payment->id);
