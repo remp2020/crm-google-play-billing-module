@@ -196,7 +196,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if (!in_array($subscriptionResponse->getPaymentState(), [
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
-        ])) {
+        ], true)) {
             throw new DoNotRetryException("Unable to handle PaymentState [{$subscriptionResponse->getPaymentState()}], no payment created.");
         }
 

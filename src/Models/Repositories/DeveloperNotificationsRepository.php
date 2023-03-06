@@ -77,7 +77,7 @@ class DeveloperNotificationsRepository extends Repository
         int $notificationType,
         string $status = self::STATUS_NEW
     ) {
-        if (!in_array($notificationType, self::NOTIFICATION_TYPES)) {
+        if (!in_array($notificationType, self::NOTIFICATION_TYPES, true)) {
             throw new \Exception("Incorrect notification type provided. Got [{$notificationType}].");
         }
 

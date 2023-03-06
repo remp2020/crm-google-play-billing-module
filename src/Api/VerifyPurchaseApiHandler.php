@@ -176,7 +176,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         if (!in_array($gSubscription->getPaymentState(), [
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
-        ])) {
+        ], true)) {
             $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [
                 'status' => 'error',
                 'code' => 'payment_not_confirmed',
