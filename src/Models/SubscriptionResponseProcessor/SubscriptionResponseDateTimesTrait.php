@@ -9,7 +9,7 @@ trait SubscriptionResponseDateTimesTrait
 {
     public function getSubscriptionStartAt(SubscriptionResponse $subscriptionResponse): DateTime
     {
-        $startTimeMicros = sprintf("%.6f", $subscriptionResponse->getStartTimeMillis() / 1000);
+        $startTimeMicros = sprintf("%.6f", (int) $subscriptionResponse->getStartTimeMillis() / 1000);
         $subscriptionStartAt = DateTime::createFromFormat("U.u", $startTimeMicros);
         $subscriptionStartAt->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         return $subscriptionStartAt;
@@ -17,7 +17,7 @@ trait SubscriptionResponseDateTimesTrait
 
     public function getSubscriptionEndAt(SubscriptionResponse $subscriptionResponse): DateTime
     {
-        $expiryTimeMicros = sprintf("%.6f", $subscriptionResponse->getExpiryTimeMillis() / 1000);
+        $expiryTimeMicros = sprintf("%.6f", (int) $subscriptionResponse->getExpiryTimeMillis() / 1000);
         $subscriptionEndAt = DateTime::createFromFormat("U.u", $expiryTimeMicros);
         $subscriptionEndAt->setTimezone(new \DateTimeZone(date_default_timezone_get()));
         return $subscriptionEndAt;

@@ -25,6 +25,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         DeveloperNotificationsRepository $developerNotificationsRepository,
         PurchaseTokensRepository $purchaseTokensRepository
     ) {
+        parent::__construct();
         $this->developerNotificationsRepository = $developerNotificationsRepository;
         $this->purchaseTokensRepository = $purchaseTokensRepository;
     }
