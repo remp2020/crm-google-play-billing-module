@@ -33,6 +33,7 @@ use Mockery\MockInterface;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;
+use Nette\Utils\Random;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
 use ReceiptValidator\GooglePlay\Validator;
 
@@ -140,7 +141,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $this->assertEquals(0, $this->subscriptionsRepository->totalCount());
         $this->assertEquals(0, $this->paymentMetaRepository->totalCount());
 
-        $purchaseToken = md5('random');
+        $purchaseToken = 'purchase_token_' . Random::generate();
         $orderId = 'GPA.1111-1111-1111-11111';
         $googleSubscriptionType = $this->getGooglePlaySubscriptionTypeWeb();
         $startTimeMillisPurchase = new DateTime('2030-04-27 19:20:57');
@@ -197,7 +198,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
          * FIRST PURCHASE ********************************************* *
          * ************************************************************ */
 
-        $purchaseToken = md5('random');
+        $purchaseToken = 'purchase_token_' . Random::generate();
         $orderId = 'GPA.1111-1111-1111-11111';
         $googleSubscriptionType = $this->getGooglePlaySubscriptionTypeWeb();
         $startTimeMillisPurchase = new DateTime('2030-04-27 19:20:57');
@@ -255,7 +256,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
          * FIRST PURCHASE ********************************************* *
          * ************************************************************ */
 
-        $purchaseToken = md5('random');
+        $purchaseToken = 'purchase_token_' . Random::generate();
         $orderId = 'GPA.1111-1111-1111-11111';
         $googleSubscriptionType = $this->getGooglePlaySubscriptionTypeWeb(2);
         $startTimeMillisPurchase = new DateTime('2030-04-27 19:20:57');

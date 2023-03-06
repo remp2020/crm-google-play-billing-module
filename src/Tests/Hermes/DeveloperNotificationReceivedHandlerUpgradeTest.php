@@ -33,6 +33,7 @@ use Mockery\MockInterface;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;
+use Nette\Utils\Random;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
 use ReceiptValidator\GooglePlay\Validator;
 use Tracy\Debugger;
@@ -146,9 +147,8 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         /* ************************************************************ *
          * FIRST PURCHASE ********************************************* *
          * ************************************************************ */
-
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
-            md5('random'),
+            'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
             $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
         );
@@ -257,7 +257,7 @@ JSON;
          * ************************************************************ */
 
         $purchaseTokenUpgradePurchase = $this->purchaseTokensRepository->add(
-            md5('random'),
+            'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
             $this->getGooglePlaySubscriptionTypeStandard()->subscription_id // upgraded subscription
         );
