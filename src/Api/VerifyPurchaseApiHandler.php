@@ -41,54 +41,25 @@ class VerifyPurchaseApiHandler extends ApiHandler
 {
     use JsonValidationTrait;
 
-    private $accessTokensRepository;
-    private $developerNotificationReceivedHandler;
-    private $googlePlayValidatorFactory;
-    private $googlePlaySubscriptionTypesRepository;
-    private $paymentGatewaysRepository;
-    private $paymentMetaRepository;
-    private $paymentsRepository;
-    private $subscriptionResponseProcessor;
-    private $unclaimedUser;
-    private $userMetaRepository;
-    private $usersRepository;
-    private $deviceTokensRepository;
-    private $purchaseTokensRepository;
-    private $purchaseDeviceTokensRepository;
-
     /** @var Validator */
     private $googlePlayValidator;
 
     public function __construct(
-        AccessTokensRepository $accessTokensRepository,
-        DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler,
-        GooglePlayValidatorFactory $googlePlayValidatorFactory,
-        GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
-        PaymentGatewaysRepository $paymentGatewaysRepository,
-        PaymentMetaRepository $paymentMetaRepository,
-        PaymentsRepository $paymentsRepository,
-        SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
-        UnclaimedUser $unclaimedUser,
-        UserMetaRepository $userMetaRepository,
-        UsersRepository $usersRepository,
-        DeviceTokensRepository $deviceTokensRepository,
-        PurchaseTokensRepository $purchaseTokensRepository,
-        PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository
+        private AccessTokensRepository $accessTokensRepository,
+        private DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler,
+        private GooglePlayValidatorFactory $googlePlayValidatorFactory,
+        private GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
+        private PaymentGatewaysRepository $paymentGatewaysRepository,
+        private PaymentMetaRepository $paymentMetaRepository,
+        private PaymentsRepository $paymentsRepository,
+        private SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
+        private UnclaimedUser $unclaimedUser,
+        private UserMetaRepository $userMetaRepository,
+        private UsersRepository $usersRepository,
+        private DeviceTokensRepository $deviceTokensRepository,
+        private PurchaseTokensRepository $purchaseTokensRepository,
+        private PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository
     ) {
-        $this->accessTokensRepository = $accessTokensRepository;
-        $this->developerNotificationReceivedHandler = $developerNotificationReceivedHandler;
-        $this->googlePlayValidatorFactory = $googlePlayValidatorFactory;
-        $this->googlePlaySubscriptionTypesRepository = $googlePlaySubscriptionTypesRepository;
-        $this->paymentGatewaysRepository = $paymentGatewaysRepository;
-        $this->paymentMetaRepository = $paymentMetaRepository;
-        $this->paymentsRepository = $paymentsRepository;
-        $this->subscriptionResponseProcessor = $subscriptionResponseProcessor;
-        $this->unclaimedUser = $unclaimedUser;
-        $this->userMetaRepository = $userMetaRepository;
-        $this->usersRepository = $usersRepository;
-        $this->deviceTokensRepository = $deviceTokensRepository;
-        $this->purchaseTokensRepository = $purchaseTokensRepository;
-        $this->purchaseDeviceTokensRepository = $purchaseDeviceTokensRepository;
     }
 
     public function params(): array
