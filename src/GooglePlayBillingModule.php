@@ -14,7 +14,6 @@ use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
 use Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
-use League\Event\Emitter;
 use Tomaj\Hermes\Dispatcher;
 
 class GooglePlayBillingModule extends CrmModule
@@ -64,19 +63,19 @@ class GooglePlayBillingModule extends CrmModule
         $seederManager->addSeeder($this->getInstance(\Crm\GooglePlayBillingModule\Seeders\SnippetsSeeder::class), 100);
     }
 
-    public function registerEventHandlers(Emitter $emitter)
+    public function registerLazyEventHandlers(\Crm\ApplicationModule\Event\LazyEventEmitter $emitter)
     {
         $emitter->addListener(
             \Crm\UsersModule\Events\RemovedAccessTokenEvent::class,
-            $this->getInstance(\Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler::class)
+            \Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler::class
         );
         $emitter->addListener(
             \Crm\UsersModule\Events\PairDeviceAccessTokensEvent::class,
-            $this->getInstance(\Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler::class)
+            \Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler::class
         );
         $emitter->addListener(
             \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
-            $this->getInstance(\Crm\GooglePlayBillingModule\Events\PaymentStatusChangeEventHandler::class)
+            \Crm\GooglePlayBillingModule\Events\PaymentStatusChangeEventHandler::class
         );
     }
 
