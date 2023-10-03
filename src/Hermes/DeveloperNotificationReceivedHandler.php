@@ -116,11 +116,23 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
             // following notification types do not affect existing subscriptions or payments in CRM
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_ON_HOLD:
-            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_IN_GRACE_PERIOD:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_DEFERRED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED:
+                break;
+
+            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_IN_GRACE_PERIOD:
+                try {
+                    $this->createGoogleGracePeriodSubscription($gSubscription, $developerNotification);
+                } catch (DoNotRetryException $e) {
+                    Debugger::log("Unable to create grace period subscription. DeveloperNotification ID: [{$developerNotification->id}]. Error: [{$e->getMessage()}]", Debugger::ERROR);
+                    $this->developerNotificationsRepository->updateStatus(
+                        $developerNotification,
+                        DeveloperNotificationsRepository::STATUS_ERROR
+                    );
+                    return false;
+                }
                 break;
 
             default:
@@ -385,6 +397,100 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             null,
             true,
             null
+        );
+
+        foreach ($metas as $metaKey => $metaData) {
+            $this->subscriptionMetaRepository->add($subscription, $metaKey, $metaData);
+        }
+
+        return $subscription;
+    }
+
+    /**
+     * Create grace period subscription
+     *
+     * @description The grace period is designed to help you reduce involuntary churn. If
+     *              grace period is enabled for an auto-renewing base plan, a subscription
+     *              purchase enters the grace period if there are payment issues at the
+     *              end of a billing cycle. During this time, the user should still have
+     *              access to their subscription while Google Play tries to renew
+     *              the subscription by reattempting the charge periodically.
+     *
+     *              While the user is in a grace period, the subscription resource contains
+     *              autoRenewEnabled = true. Google Play dynamically extends the expiryTime
+     *              value until the grace period has expired because entitlement should last
+     *              until the user cancels or the grace period has lasted for its maximum length.
+     *              The value of the subscriptionState field during this period is
+     *              SUBSCRIPTION_STATE_IN_GRACE_PERIOD.
+     */
+    public function createGoogleGracePeriodSubscription(
+        SubscriptionResponse $subscriptionResponse,
+        ActiveRow $developerNotification,
+    ): ?ActiveRow {
+        // prepare subscription and subscription meta
+        $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
+        $subscriptionType = $this->getSubscriptionType($developerNotification);
+        $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
+        $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($subscriptionResponse);
+
+        $metas = [
+            GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN => $developerNotification->purchase_token,
+            GooglePlayBillingModule::META_KEY_ORDER_ID => $subscriptionResponse->getRawResponse()->getOrderId(),
+            GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID => $developerNotification->id,
+        ];
+
+        // get last subscription (with or without payment) linked to grace period through purchase token
+        $subscriptionWithPurchaseToken = $this->subscriptionsRepository->getTable()
+            ->where([
+                ':subscriptions_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+                ':subscriptions_meta.value' => $developerNotification->purchase_token,
+                'end_time >= ?' => $subscriptionStartAt->format('Y-m-d H:i:s'),
+            ])
+            ->order('subscriptions.end_time DESC')
+            ->fetch();
+
+        $paymentWithPurchaseToken = $this->paymentsRepository->getTable()
+            ->where([
+                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+                ':payment_meta.value' => $developerNotification->purchase_token,
+                'subscription_end_at >= ?' => $subscriptionStartAt->format('Y-m-d H:i:s'),
+            ])
+            ->order('payments.subscription_end_at DESC')
+            ->fetch();
+
+        if ($paymentWithPurchaseToken === null || !isset($paymentWithPurchaseToken->subscription)) {
+            throw new DoNotRetryException(
+                "Cannot grant grace period without previous purchase. " .
+                "Unable to find payment with purchase token [{$developerNotification->purchase_token}]."
+            );
+        }
+
+        // get latest subscription (from subscription with meta or from payment with meta)
+        if ($paymentWithPurchaseToken->subscription->end_time >= $subscriptionWithPurchaseToken?->end_time) {
+            $lastSubscription = $paymentWithPurchaseToken->subscription;
+        } else {
+            $lastSubscription = $subscriptionWithPurchaseToken;
+        }
+
+        if ($lastSubscription->end_time >= $subscriptionEndAt) {
+            throw new DoNotRetryException(
+                "There is already subscription ID [{$lastSubscription->id}] with later end time " .
+                "linked through purchase token [{$developerNotification->purchase_token}]."
+            );
+        }
+
+        // start of subscription should be after end of last subscription or NOW if previous subscription is in past
+        $subscriptionStartAt = max(new DateTime(), $lastSubscription->end_time);
+
+        $subscription = $this->subscriptionsRepository->add(
+            $subscriptionType,
+            false,
+            true,
+            $user,
+            SubscriptionsRepository::TYPE_PREPAID,
+            $subscriptionStartAt,
+            $subscriptionEndAt,
+            'GooglePlay Grace Period'
         );
 
         foreach ($metas as $metaKey => $metaData) {
