@@ -85,6 +85,14 @@ class GooglePlayBillingModule extends CrmModule
             'users.dataprovider.access_tokens',
             $this->getInstance(\Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider::class)
         );
+        $dataProviderManager->registerDataProvider(
+            'payments.dataprovider.payments_filter_form',
+            $this->getInstance(\Crm\GooglePlayBillingModule\DataProviders\ExternalIdAdminFilterFormDataProvider::class)
+        );
+        $dataProviderManager->registerDataProvider(
+            'admin.dataprovider.universal_search',
+            $this->getInstance(\Crm\GooglePlayBillingModule\DataProviders\ExternalIdUniversalSearchDataProvider::class)
+        );
     }
 
     public function registerLazyWidgets(LazyWidgetManagerInterface $widgetManager)

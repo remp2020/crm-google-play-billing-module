@@ -14,6 +14,8 @@ services:
 	- Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand
 	- Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget
 	- Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider
+	- Crm\GooglePlayBillingModule\DataProviders\ExternalIdAdminFilterFormDataProvider
+	- Crm\GooglePlayBillingModule\DataProviders\ExternalIdUniversalSearchDataProvider
 	- Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler
 	- Crm\GooglePlayBillingModule\Events\PaymentStatusChangeEventHandler
 	- Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler
