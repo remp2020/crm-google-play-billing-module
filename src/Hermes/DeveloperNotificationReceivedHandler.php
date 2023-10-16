@@ -427,6 +427,11 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         SubscriptionResponse $subscriptionResponse,
         ActiveRow $developerNotification,
     ): ?ActiveRow {
+        // Subscription might already be charged when we get here. Let's not assume we're still in the grace period.
+        if (!$subscriptionResponse->getAutoRenewing() || $subscriptionResponse->getPaymentState() !== GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_PENDING) {
+            return null;
+        }
+
         // prepare subscription and subscription meta
         $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
         $subscriptionType = $this->getSubscriptionType($developerNotification);
