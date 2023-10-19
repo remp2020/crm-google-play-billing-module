@@ -272,7 +272,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // orderID is same, only suffix is different
         $orderIdGracePeriod = $orderIdFirstPurchase . '..0';
         // start of subscription within grace period notification is same as start of previous subscription
-        $startTimeMillisGracePeriod = $startTimeMillisFirstPurchase;
+        $startTimeMillisGracePeriod = $expiryTimeMillisFirstPurchase;
         // expiry of grace period subscription will be cca 2 days after expiration of previous purchase
         $expiryTimeMillisGracePeriod = $expiryTimeMillisFirstPurchase->modifyClone('+2 days');
         // price doesn't matter now
@@ -343,7 +343,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(1, $this->paymentsRepository->totalCount());
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount());
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount());
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount());
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount());
 
         $payments = $this->paymentsRepository->getTable()->order('created_at')->fetchAll();
         $paymentFirstPurchaseReload = reset($payments);
@@ -381,7 +381,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // check new subscription (grace period) & meta
         $this->assertEquals($subscriptionFirstPurchaseReload->subscription_type_id, $subscriptionGracePeriod->subscription_type_id);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscriptionGracePeriod->subscription_type_id);
-        $this->assertEquals($expiryTimeMillisFirstPurchase, $subscriptionGracePeriod->start_time); // grace period should start after last valid Google subscription
+        $this->assertEquals($startTimeMillisGracePeriod, $subscriptionGracePeriod->start_time); // grace period should start after last valid Google subscription
         $this->assertEquals($expiryTimeMillisGracePeriod, $subscriptionGracePeriod->end_time);
         $this->assertEquals(
             $purchaseTokenGracePeriod->purchase_token,
@@ -394,6 +394,9 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(
             $orderIdGracePeriod,
             $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_order_id')->value
+        );
+        $this->assertTrue(
+            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_grace_period_subscription')->value
         );
     }
 
@@ -602,7 +605,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(1, $this->paymentsRepository->totalCount()); // no change
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount()); // new subscription
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount()); // no change
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount()); // 3 new subscription meta
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount()); // 4 new subscription meta
 
         $payments = $this->paymentsRepository->getTable()->order('created_at')->fetchAll();
         $paymentFirstPurchaseReload = reset($payments);
@@ -653,6 +656,9 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(
             $orderIdGracePeriod,
             $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_order_id')->value
+        );
+        $this->assertTrue(
+            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_grace_period_subscription')->value
         );
 
         /* ***************************************************************** *
@@ -723,7 +729,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(1, $this->paymentsRepository->totalCount());
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount());
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount());
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount());
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount());
 
         // handler returns only bool value; check expected log for result (nothing logged)
         $mockLogger = $this->createMock(ILogger::class);
@@ -746,7 +752,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(1, $this->paymentsRepository->totalCount()); // no change
         $this->assertEquals(3, $this->subscriptionsRepository->totalCount()); // new subscription
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount()); // no change
-        $this->assertEquals(6, $this->subscriptionMetaRepository->totalCount()); // 3 new subscription meta
+        $this->assertEquals(8, $this->subscriptionMetaRepository->totalCount()); // 4 new subscription meta
 
         $payments = $this->paymentsRepository->getTable()->order('created_at')->fetchAll();
         $paymentFirstPurchaseReload = reset($payments);
@@ -779,6 +785,9 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(
             $orderIdGracePeriodSecond,
             $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriodSecond, 'google_play_billing_order_id')->value
+        );
+        $this->assertTrue(
+            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_grace_period_subscription')->value
         );
     }
 
@@ -889,7 +898,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // orderID is same, only suffix is different
         $orderIdGracePeriod = $orderIdFirstPurchase . '..0';
         // start of subscription within grace period notification is same as start of previous subscription
-        $startTimeMillisGracePeriod = $startTimeMillisFirstPurchase;
+        $startTimeMillisGracePeriod = $expiryTimeMillisFirstPurchase;
         // expiry of grace period subscription will be cca 2 days after expiration of previous purchase
         $expiryTimeMillisGracePeriod = $expiryTimeMillisFirstPurchase->modifyClone('+2 days');
         // price doesn't matter now
@@ -960,7 +969,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(1, $this->paymentsRepository->totalCount()); // no change
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount()); // new subscription
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount()); // no change
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount()); // 3 new subscription meta
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount()); // 4 new subscription meta
 
         /* ***************************************************************** *
          * 3.) SECOND PURCHASE ********************************************* *
@@ -978,10 +987,13 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
             ],
         );
 
-        // orderID is same, only suffix is different
-        $orderIdSecondPurchase = $orderIdFirstPurchase . '..1';
+        /* ***************************************************************** *
+         * orderID is same as first grace period *************************** *
+         * ***************************************************************** */
+        $orderIdSecondPurchase = $orderIdFirstPurchase . '..0';
         // start of next paid subscription starts after end of grace period
-        $startTimeMillisSecondPurchase = $expiryTimeMillisGracePeriod;
+        $startTimeMillisSecondPurchase = $expiryTimeMillisGracePeriod->modifyClone('-1 day');
+        ;
         $expiryTimeMillisSecondPurchase = $startTimeMillisSecondPurchase->modifyClone('+1 month');
         $priceAmountMicrosSecondPurchase = $this->getGooglePlaySubscriptionTypeWeb()->subscription_type->price * 1000000;
         // acknowledgementState: 1 -> set to acknowledged, so we don't need to mock acknowledgement service
@@ -1023,7 +1035,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(1, $this->paymentsRepository->totalCount());
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount());
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount());
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount());
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount());
 
         $result = $this->developerNotificationReceivedHandler->handle($hermesMessageSecondPurchase);
         $this->assertTrue($result);
@@ -1039,7 +1051,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(2, $this->paymentsRepository->totalCount()); // 1 new payment
         $this->assertEquals(3, $this->subscriptionsRepository->totalCount()); // 1 new subscription
         $this->assertEquals(6, $this->paymentMetaRepository->totalCount()); // 3 new meta
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount()); // no change
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount()); // no change
 
         /* ***************************************************************** *
          * 4.) SECOND GRACE PERIOD NOTIFICATION **************************** *
@@ -1059,9 +1071,9 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         );
 
         // orderID is same, only suffix is different
-        $orderIdGracePeriodSecond = $orderIdFirstPurchase . '..2';
+        $orderIdGracePeriodSecond = $orderIdFirstPurchase . '..1';
         // start of subscription within grace period notification is same as start of previous subscription
-        $startTimeMillisGracePeriodSecond = $startTimeMillisSecondPurchase;
+        $startTimeMillisGracePeriodSecond = $expiryTimeMillisSecondPurchase;
         // expiry of grace period subscription will be cca 2 days after expiration of previous purchase
         $expiryTimeMillisGracePeriodSecond = $expiryTimeMillisSecondPurchase->modifyClone('+2 days');
         // price doesn't matter now
@@ -1109,7 +1121,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(2, $this->paymentsRepository->totalCount());
         $this->assertEquals(3, $this->subscriptionsRepository->totalCount());
         $this->assertEquals(6, $this->paymentMetaRepository->totalCount());
-        $this->assertEquals(3, $this->subscriptionMetaRepository->totalCount());
+        $this->assertEquals(4, $this->subscriptionMetaRepository->totalCount());
 
         // handler returns only bool value; check expected log for result (nothing logged)
         $mockLogger = $this->createMock(ILogger::class);
@@ -1132,7 +1144,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals(2, $this->paymentsRepository->totalCount()); // no change
         $this->assertEquals(4, $this->subscriptionsRepository->totalCount()); // new subscription
         $this->assertEquals(6, $this->paymentMetaRepository->totalCount()); // no change
-        $this->assertEquals(6, $this->subscriptionMetaRepository->totalCount()); // 3 new subscription meta
+        $this->assertEquals(8, $this->subscriptionMetaRepository->totalCount()); // 4 new subscription meta
 
         /* ***************************************************************** *
          * FINAL CHECK ***************************************************** *
@@ -1194,6 +1206,15 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
             $orderIdGracePeriodSecond,
             $this->subscriptionMetaRepository->findBySubscriptionAndKey(
                 $subscription4,
+                'google_play_billing_order_id'
+            )->value
+        );
+
+        // grace period subscription and renewed subscription have the same order ID is subscription meta
+        $this->assertEquals(
+            $orderIdSecondPurchase,
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey(
+                $subscription2,
                 'google_play_billing_order_id'
             )->value
         );
@@ -1299,9 +1320,9 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
             ],
         );
 
-        $orderIdRenewed = $orderIdFirstPurchase . '..1'; // set to 1 to simulate that it was "generated" after grace period
+        $orderIdRenewed = $orderIdFirstPurchase . '..0';
         $startTimeMillisRenewed = $expiryTimeMillisFirstPurchase;
-        $expiryTimeMillisRenewed = new DateTime('2030-06-27 19:20:57');
+        $expiryTimeMillisRenewed = $startTimeMillisRenewed->modifyClone('+1 month');
         $priceAmountMicrosRenewed = $this->getGooglePlaySubscriptionTypeWeb()->subscription_type->price * 1000000;
         // acknowledgementState: 1 -> set to acknowledged, so we don't need to mock acknowledgement service
         // autoRenewing: true -> first purchase set to create recurrent payment
@@ -1366,12 +1387,12 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
             ],
         );
 
-        // orderID is same, only suffix is different
-        $orderIdGracePeriod = $orderIdFirstPurchase . '..0'; // set to 0 to simulate that it was "generated" after grace period
-        // start of subscription within grace period notification is same as start of previous subscription
-        $startTimeMillisGracePeriod = $startTimeMillisFirstPurchase;
-        // expiry of grace period subscription will be cca 2 days after expiration of previous purchase
-        $expiryTimeMillisGracePeriod = $expiryTimeMillisFirstPurchase->modifyClone('+2 days');
+        // orderID is same as renewed payment
+        $orderIdGracePeriod = $orderIdFirstPurchase . '..0';
+        // start time is the same as renewed subscription
+        $startTimeMillisGracePeriod = $startTimeMillisRenewed;
+        // end time is the same as renewed subscription
+        $expiryTimeMillisGracePeriod = $expiryTimeMillisRenewed;
         // price doesn't matter now
         $priceAmountMicrosGracePeriod = $this->getGooglePlaySubscriptionTypeWeb()->subscription_type->price * 1000000;
         // other settings:

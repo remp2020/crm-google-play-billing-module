@@ -21,6 +21,7 @@ class GooglePlayBillingModule extends CrmModule
     const META_KEY_PURCHASE_TOKEN = 'google_play_billing_purchase_token';
     const META_KEY_ORDER_ID = 'google_play_billing_order_id';
     const META_KEY_DEVELOPER_NOTIFICATION_ID = 'google_play_billing_developer_notification_id';
+    const META_KEY_GRACE_PERIOD_SUBSCRIPTION = 'google_play_billing_grace_period_subscription';
 
     public const USER_SOURCE_APP = 'android-app';
 

@@ -197,10 +197,22 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $subscriptionResponse->getRawResponse()->getOrderId()
         );
 
-        if ($subscription) {
+        if ($subscription?->type === SubscriptionsRepository::TYPE_FREE) {
             // free trial exists for given SubscriptionResponse,
             // do not create payment
             return null;
+        }
+
+        if ($subscription) {
+            $isGraceSubscription = $this->subscriptionMetaRepository->findBySubscriptionAndKey(
+                $subscription,
+                GooglePlayBillingModule::META_KEY_GRACE_PERIOD_SUBSCRIPTION
+            );
+
+            if (!$isGraceSubscription) {
+                // should not get here
+                throw new \Exception("Subscription already exists for order ID [{$subscriptionResponse->getRawResponse()->getOrderId()}].");
+            }
         }
 
         $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
@@ -212,7 +224,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             throw new DoNotRetryException("Unable to handle PaymentState [{$subscriptionResponse->getPaymentState()}], no payment created.");
         }
 
-        $subscriptionType = $this->getSubscriptionType($developerNotification);
+        $subscriptionType = $this->getSubscriptionType($subscriptionResponse, $developerNotification);
 
         $paymentGatewayCode = GooglePlayBilling::GATEWAY_CODE;
         $paymentGateway = $this->paymentGatewaysRepository->findByCode($paymentGatewayCode);
@@ -275,19 +287,11 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             }
 
             $recurrentCharge = true;
+        }
 
-            // Handle case when introductory subscription type is different from renewals.
-            if ($subscriptionType->next_subscription_type_id) {
-                $googleSubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($developerNotification->subscription_id);
-                if ($googleSubscriptionType->offer_periods) {
-                    $usedOfferPeriods = $this->getUsedOfferPeriods($subscriptionResponse->getRawResponse()->getOrderId());
-                    if ($usedOfferPeriods >= $googleSubscriptionType->offer_periods) {
-                        $subscriptionType = $subscriptionType->next_subscription_type;
-                    }
-                } else {
-                    $subscriptionType = $subscriptionType->next_subscription_type;
-                }
-            }
+        // this is grace period subscription, set end time to start time of purchased (renewed) subscription
+        if ($subscription) {
+            $this->stopGracePeriodSubscription($subscription, $subscriptionStartAt);
         }
 
         $paymentItemContainer = (new PaymentItemContainer())
@@ -434,7 +438,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         // prepare subscription and subscription meta
         $user = $this->subscriptionResponseProcessor->getUser($subscriptionResponse, $developerNotification);
-        $subscriptionType = $this->getSubscriptionType($developerNotification);
+        $subscriptionType = $this->getSubscriptionType($subscriptionResponse, $developerNotification);
         $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
         $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($subscriptionResponse);
 
@@ -442,6 +446,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN => $developerNotification->purchase_token,
             GooglePlayBillingModule::META_KEY_ORDER_ID => $subscriptionResponse->getRawResponse()->getOrderId(),
             GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID => $developerNotification->id,
+            GooglePlayBillingModule::META_KEY_GRACE_PERIOD_SUBSCRIPTION => true,
         ];
 
         // get last subscription (with or without payment) linked to grace period through purchase token
@@ -505,12 +510,31 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         return $subscription;
     }
 
-    public function getSubscriptionType(ActiveRow $developerNotification): ActiveRow
+    private function stopGracePeriodSubscription(ActiveRow $subscription, $endTime)
+    {
+        $this->subscriptionsRepository->update($subscription, [
+            'end_time' => $endTime
+        ]);
+    }
+
+    public function getSubscriptionType(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow
     {
         $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($developerNotification->subscription_id);
         if (!$googlePlaySubscriptionType || !isset($googlePlaySubscriptionType->subscription_type)) {
             throw new \Exception("Unable to find SubscriptionType with code [{$developerNotification->subscription_id}] provided by DeveloperNotification.");
         }
+
+        // Handle case when introductory subscription type is different from renewals.
+        if ($googlePlaySubscriptionType->subscription_type->next_subscription_type_id) {
+            $usedOfferPeriods = $this->getUsedOfferPeriods($subscriptionResponse->getRawResponse()->getOrderId());
+            // used all offer periods
+            // if offer periods not set -> there is 1 offer period and we have used it already
+            if (($googlePlaySubscriptionType->offer_periods && $usedOfferPeriods >= $googlePlaySubscriptionType->offer_periods)
+                || (is_null($googlePlaySubscriptionType->offer_periods) && $usedOfferPeriods > 0)) {
+                return $googlePlaySubscriptionType->subscription_type->next_subscription_type;
+            }
+        }
+
         return $googlePlaySubscriptionType->subscription_type;
     }
 
