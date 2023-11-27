@@ -2,6 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Tests;
 
+use Crm\ApplicationModule\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler;
 use Crm\UsersModule\Events\PairDeviceAccessTokensEvent;
@@ -10,15 +11,14 @@ use Crm\UsersModule\Repository\AccessTokensRepository;
 use Crm\UsersModule\Repository\UserMetaRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Crm\UsersModule\User\UnclaimedUser;
-use League\Event\Emitter;
 
 class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
 {
     const CLAIMED_LOGIN = '1test@claimed.st';
     const UNCLAIMED_LOGIN = '1test@unclaimed.st';
 
-    /** @var Emitter */
-    private $emitter;
+    /** @var LazyEventEmitter */
+    private $lazyEventEmitter;
 
     /** @var AccessTokensRepository */
     private $accessTokensRepository;
@@ -57,8 +57,8 @@ class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
         $this->usersRepository = $this->getRepository(UsersRepository::class);
 
         $this->unclaimedUser = $this->inject(UnclaimedUser::class);
-        $this->emitter = $this->inject(Emitter::class);
-        $this->emitter->addListener(
+        $this->lazyEventEmitter = $this->inject(LazyEventEmitter::class);
+        $this->lazyEventEmitter->addListener(
             PairDeviceAccessTokensEvent::class,
             $this->inject(PairDeviceAccessTokensEventHandler::class)
         );
@@ -66,10 +66,7 @@ class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
 
     protected function tearDown(): void
     {
-        $this->emitter->removeListener(
-            PairDeviceAccessTokensEvent::class,
-            $this->inject(PairDeviceAccessTokensEventHandler::class)
-        );
+        $this->lazyEventEmitter->removeAllListeners(PairDeviceAccessTokensEvent::class);
 
         parent::tearDown();
     }

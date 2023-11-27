@@ -2,6 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Tests;
 
+use Crm\ApplicationModule\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
@@ -24,7 +25,6 @@ use Crm\UsersModule\Events\RemovedAccessTokenEvent;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
 use Crm\UsersModule\Repository\AccessTokensRepository;
 use Crm\UsersModule\Repository\UsersRepository;
-use League\Event\Emitter;
 use Nette\Database\Table\ActiveRow;
 
 class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
@@ -32,8 +32,8 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
     /** @var ActiveRow */
     private $paymentGateway;
 
-    /** @var Emitter */
-    private $emitter;
+    /** @var LazyEventEmitter */
+    private $lazyEventEmitter;
 
     /** @var AccessTokensRepository */
     private $accessTokensRepository;
@@ -93,8 +93,8 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         $this->paymentMetaRepository = $this->getRepository(PaymentMetaRepository::class);
         $this->purchaseTokensRepository = $this->getRepository(PurchaseTokensRepository::class);
 
-        $this->emitter = $this->inject(Emitter::class);
-        $this->emitter->addListener(
+        $this->lazyEventEmitter = $this->inject(LazyEventEmitter::class);
+        $this->lazyEventEmitter->addListener(
             RemovedAccessTokenEvent::class,
             $this->inject(RemovedAccessTokenEventHandler::class)
         );
@@ -102,10 +102,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
 
     protected function tearDown(): void
     {
-        $this->emitter->removeListener(
-            RemovedAccessTokenEvent::class,
-            $this->inject(RemovedAccessTokenEventHandler::class)
-        );
+        $this->lazyEventEmitter->removeAllListeners(RemovedAccessTokenEvent::class);
 
         parent::tearDown();
     }
