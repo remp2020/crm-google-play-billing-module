@@ -64,7 +64,25 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         if ($developerNotification->version !== "1.0") {
             return $this->logAndReturnPayloadError("Only version 1.0 of DeveloperNotification is supported.");
         }
-        // TODO: what to do with different notifications?
+
+        // ignore void purchase notifications
+        if (isset($developerNotification->voidedPurchaseNotification)) {
+            // TODO[crm#3031]: save developer notification? Fields of `google_play_billing_developer_notifications`
+            //       follow SubscriptionNotification; we don't have all required fields in VoidedPurchaseNotification.
+            // TODO[crm#3031]: Debug log can be removed when we confirm that OK response is enough for Google to stop sending it.
+            $data = print_r($developerNotification->voidedPurchaseNotification, true);
+            Debugger::log(
+                "VoidedPurchaseNotification received: [{$data}].",
+                Debugger::DEBUG,
+            );
+            $response = new JsonApiResponse(Response::S200_OK, [
+                'status' => 'ok',
+                'result' => 'Developer Notification acknowledged.',
+            ]);
+            return $response;
+        }
+
+        // TODO: what to do with different notifications (oneTimeProductNotification and testNotification)?
         if (!isset($developerNotification->subscriptionNotification)) {
             return $this->logAndReturnPayloadError("Only SubscriptionNotification is supported.");
         }

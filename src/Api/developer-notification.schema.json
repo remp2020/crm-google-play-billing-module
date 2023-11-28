@@ -64,6 +64,20 @@
         }
       }
     },
+    "voidedPurchaseNotification": {
+      "type": "object",
+      "properties": {
+        "purchaseToken": {
+          "type": "string"
+        },
+        "orderId": {
+          "type": "string"
+        },
+        "productType": {
+          "type": "integer"
+        }
+      }
+    },
     "testNotification": {
       "type": "object",
       "properties": {
