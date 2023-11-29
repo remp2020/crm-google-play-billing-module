@@ -289,9 +289,10 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $recurrentCharge = true;
         }
 
-        // this is grace period subscription, set end time to start time of purchased (renewed) subscription
+        // this is grace period subscription.
+        // if payment is after grace period subscription expired (purchased subscription recovered from hold) grace period subscription end time does not change.
         if ($subscription) {
-            $this->stopGracePeriodSubscription($subscription, $subscriptionStartAt);
+            $this->stopGracePeriodSubscription($subscription);
         }
 
         $paymentItemContainer = (new PaymentItemContainer())
@@ -510,11 +511,13 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         return $subscription;
     }
 
-    private function stopGracePeriodSubscription(ActiveRow $subscription, $endTime)
+    private function stopGracePeriodSubscription(ActiveRow $subscription)
     {
-        $this->subscriptionsRepository->update($subscription, [
-            'end_time' => $endTime
-        ]);
+        if ($subscription->end_time > new DateTime()) {
+            $this->subscriptionsRepository->update($subscription, [
+                'end_time' => new DateTime()
+            ]);
+        }
     }
 
     public function getSubscriptionType(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification): ActiveRow
