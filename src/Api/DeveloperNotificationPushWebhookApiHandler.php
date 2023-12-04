@@ -73,7 +73,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             $data = print_r($developerNotification->voidedPurchaseNotification, true);
             Debugger::log(
                 "VoidedPurchaseNotification received: [{$data}].",
-                Debugger::DEBUG,
+                Debugger::INFO,
             );
             $response = new JsonApiResponse(Response::S200_OK, [
                 'status' => 'ok',

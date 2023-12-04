@@ -18,6 +18,11 @@
       "required": [
         "testNotification"
       ]
+    },
+    {
+      "required": [
+        "voidedPurchaseNotification"
+      ]
     }
   ],
   "properties": {
