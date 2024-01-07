@@ -2,8 +2,8 @@
 
 namespace Crm\GooglePlayBillingModule\Api;
 
-use Crm\ApiModule\Api\ApiHandler;
-use Crm\ApiModule\Api\JsonValidationTrait;
+use Crm\ApiModule\Models\Api\ApiHandler;
+use Crm\ApiModule\Models\Api\JsonValidationTrait;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;

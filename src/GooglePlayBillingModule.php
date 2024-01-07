@@ -2,10 +2,10 @@
 
 namespace Crm\GooglePlayBillingModule;
 
-use Crm\ApiModule\Api\ApiRoutersContainerInterface;
-use Crm\ApiModule\Authorization\NoAuthorization;
-use Crm\ApiModule\Router\ApiIdentifier;
-use Crm\ApiModule\Router\ApiRoute;
+use Crm\ApiModule\Models\Api\ApiRoutersContainerInterface;
+use Crm\ApiModule\Models\Authorization\NoAuthorization;
+use Crm\ApiModule\Models\Router\ApiIdentifier;
+use Crm\ApiModule\Models\Router\ApiRoute;
 use Crm\ApplicationModule\Commands\CommandsContainerInterface;
 use Crm\ApplicationModule\CrmModule;
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
