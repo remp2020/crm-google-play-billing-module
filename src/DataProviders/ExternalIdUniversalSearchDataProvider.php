@@ -3,7 +3,7 @@
 namespace Crm\GooglePlayBillingModule\DataProviders;
 
 use Contributte\Translation\Translator;
-use Crm\AdminModule\Model\UniversalSearchDataProviderInterface;
+use Crm\AdminModule\Models\UniversalSearchDataProviderInterface;
 use Crm\ApplicationModule\Helpers\UserDateHelper;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Nette\Application\LinkGenerator;
