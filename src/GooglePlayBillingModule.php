@@ -12,6 +12,7 @@ use Crm\ApplicationModule\SeederManager;
 use Crm\ApplicationModule\User\UserDataRegistrator;
 use Crm\ApplicationModule\Widget\LazyWidgetManagerInterface;
 use Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler;
+use Crm\GooglePlayBillingModule\Commands\CreateMissingRecurrentPaymentsCommand;
 use Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
 use Tomaj\Hermes\Dispatcher;
@@ -47,6 +48,7 @@ class GooglePlayBillingModule extends CrmModule
     public function registerCommands(CommandsContainerInterface $commandsContainer)
     {
         $commandsContainer->registerCommand($this->getInstance(RevalidateDeveloperNotificationCommand::class));
+        $commandsContainer->registerCommand($this->getInstance(CreateMissingRecurrentPaymentsCommand::class));
     }
 
     public function registerHermesHandlers(Dispatcher $dispatcher)

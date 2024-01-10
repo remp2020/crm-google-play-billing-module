@@ -16,6 +16,7 @@ use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
@@ -58,7 +59,8 @@ class VerifyPurchaseApiHandler extends ApiHandler
         private UsersRepository $usersRepository,
         private DeviceTokensRepository $deviceTokensRepository,
         private PurchaseTokensRepository $purchaseTokensRepository,
-        private PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository
+        private PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
     ) {
     }
 
@@ -276,6 +278,24 @@ class VerifyPurchaseApiHandler extends ApiHandler
         );
 
         $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_PREPAID);
+
+        // handle recurrent payment
+        // - purchase token be used as recurrent token
+        // - stop any previous recurrent payments with the same purchase token
+
+        $activePurchaseTokenRecurrents = $this->recurrentPaymentsRepository
+            ->getUserActiveRecurrentPayments($payment->user_id)
+            ->where(['cid' => $purchaseTokenRow->purchase_token])
+            ->fetchAll();
+        foreach ($activePurchaseTokenRecurrents as $rp) {
+            $this->recurrentPaymentsRepository->stoppedBySystem($rp->id);
+        }
+
+        $this->recurrentPaymentsRepository->createFromPayment(
+            $payment,
+            $purchaseTokenRow->purchase_token,
+            $subscriptionEndAt
+        );
 
         // payment is created internally; we can confirm it in Google
         if (!$subscriptionResponse->isAcknowledged()) {

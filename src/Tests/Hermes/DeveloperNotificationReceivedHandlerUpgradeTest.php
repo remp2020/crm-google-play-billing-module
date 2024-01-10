@@ -2,7 +2,9 @@
 
 namespace Crm\GooglePlayBillingModule\Tests\Hermes;
 
+use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\ApplicationModule\Hermes\HermesMessage;
+use Crm\ApplicationModule\Seeders\ConfigsSeeder as ApplicationConfigsSeeder;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
 use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
@@ -15,6 +17,7 @@ use Crm\PaymentsModule\Repository\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentItemsRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
@@ -66,6 +69,10 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
 
     private UsersRepository $usersRepository;
 
+    private RecurrentPaymentsRepository $recurrentPaymentsRepository;
+
+    private ApplicationConfig $applicationConfig;
+
     protected function requiredRepositories(): array
     {
         return [
@@ -85,6 +92,7 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
             PaymentItemsRepository::class,
             PaymentItemMetaRepository::class,
             UsersRepository::class,
+            RecurrentPaymentsRepository::class,
         ];
     }
 
@@ -95,6 +103,7 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
             SubscriptionTypeNamesSeeder::class,
+            ApplicationConfigsSeeder::class,
         ];
     }
 
@@ -106,6 +115,8 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
     public function setUp(): void
     {
         parent::setUp();
+
+        $this->applicationConfig = $this->inject(ApplicationConfig::class);
 
         $this->developerNotificationReceivedHandler = $this->inject(DeveloperNotificationReceivedHandler::class);
 
@@ -119,6 +130,7 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         $this->subscriptionTypeBuilder = $this->inject(SubscriptionTypeBuilder::class);
         $this->subscriptionsRepository = $this->getRepository(SubscriptionsRepository::class);
         $this->usersRepository = $this->getRepository(UsersRepository::class);
+        $this->recurrentPaymentsRepository = $this->getRepository(RecurrentPaymentsRepository::class);
 
 
         // add event handler to create subscription
@@ -206,6 +218,7 @@ JSON;
         $this->assertEquals(0, $this->paymentsRepository->totalCount());
         $this->assertEquals(0, $this->subscriptionsRepository->totalCount());
         $this->assertEquals(0, $this->paymentMetaRepository->totalCount());
+        $this->assertEquals(0, $this->recurrentPaymentsRepository->totalCount());
 
         $result = $this->developerNotificationReceivedHandler->handle($hermesMessageFirstPurchase);
         $this->assertTrue($result);
@@ -220,12 +233,17 @@ JSON;
         // payment, payment_meta and subscription created
         $this->assertEquals(1, $this->paymentsRepository->totalCount());
         $this->assertEquals(1, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(1, $this->recurrentPaymentsRepository->totalCount());
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount());
 
         // payment status & subscription_type checks
         $payment = $this->paymentsRepository->getTable()->fetch();
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $payment->subscription_type_id);
+
+        $recurrent = $this->recurrentPaymentsRepository->recurrent($payment);
+        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $recurrent->state);
+        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->cid);
 
         // check payment meta against order id and purchase token
         $this->assertEquals(
@@ -315,6 +333,7 @@ JSON;
         // state from original notification - first purchase
         $this->assertEquals(1, $this->paymentsRepository->totalCount());
         $this->assertEquals(1, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(1, $this->recurrentPaymentsRepository->totalCount());
         $this->assertEquals(3, $this->paymentMetaRepository->totalCount());
 
         // handler returns only bool value; check expected log for result (nothing logged)
@@ -336,6 +355,7 @@ JSON;
         // new payment, subscription & payment_meta
         $this->assertEquals(2, $this->paymentsRepository->totalCount());
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(2, $this->recurrentPaymentsRepository->totalCount());
         $this->assertEquals(6, $this->paymentMetaRepository->totalCount());
 
         $payments = $this->paymentsRepository->getTable()->order('created_at')->fetchAll();
@@ -358,6 +378,11 @@ JSON;
             $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value
         );
 
+        // recurrent still active
+        $paymentFirstPurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentFirstPurchase);
+        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentFirstPurchaseRecurrent->state);
+        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $paymentFirstPurchaseRecurrent->cid);
+
         // check new payment (upgrade) & meta against upgrade purchase
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentUpgradePurchase->status);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeStandard()->subscription_type_id, $paymentUpgradePurchase->subscription_type_id);
@@ -373,6 +398,10 @@ JSON;
             $orderIdUpgradePurchase,
             $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_order_id')->value
         );
+
+        $paymentUpgradePurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentUpgradePurchase);
+        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentUpgradePurchaseRecurrent->state);
+        $this->assertEquals($purchaseTokenUpgradePurchase->purchase_token, $paymentUpgradePurchaseRecurrent->cid);
 
         // check subscriptions type & start/end times against Google play validation responses
         $subscriptionFirstPurchase = $paymentFirstPurchase->subscription;
@@ -467,6 +496,7 @@ JSON;
         // number of payments & subscriptions didn't change
         $this->assertEquals(2, $this->paymentsRepository->totalCount());
         $this->assertEquals(2, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(2, $this->recurrentPaymentsRepository->totalCount());
         // but new payment_meta is present
         $this->assertEquals(7, $this->paymentMetaRepository->totalCount());
 
@@ -476,6 +506,11 @@ JSON;
 
         // we cancelled first subscription (original purchase)
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentFirstPurchase->status);
+
+        // we stopped first recurrent
+        $paymentFirstPurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentFirstPurchase);
+        $this->assertEquals(RecurrentPaymentsRepository::STATE_USER_STOP, $paymentFirstPurchaseRecurrent->state);
+
         $subscriptionFirstPurchase = $paymentFirstPurchase->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscriptionFirstPurchase->subscription_type_id);
         $this->assertEquals($startTimeMillisFirstPurchase, $paymentFirstPurchase->subscription_start_at);
@@ -511,6 +546,11 @@ JSON;
 
         // but we didn't touch second (upgrade purchase)
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentUpgradePurchase->status);
+
+        // didn't touch recurrent either
+        $paymentUpgradePurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentUpgradePurchase);
+        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentUpgradePurchaseRecurrent->state);
+
         $subscriptionUpgradePurchase = $paymentUpgradePurchase->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeStandard()->subscription_type_id, $subscriptionUpgradePurchase->subscription_type_id);
         $this->assertEquals($startTimeMillisUpgradePurchase, $paymentUpgradePurchase->subscription_start_at);

@@ -9,9 +9,11 @@ use Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessorInterface;
 use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
+use Crm\PaymentsModule\RecurrentPaymentsProcessor;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
@@ -44,7 +46,9 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         private PaymentMetaRepository $paymentMetaRepository,
         private PaymentsRepository $paymentsRepository,
         private SubscriptionsRepository $subscriptionsRepository,
-        private SubscriptionMetaRepository $subscriptionMetaRepository
+        private SubscriptionMetaRepository $subscriptionMetaRepository,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private RecurrentPaymentsProcessor $recurrentPaymentsProcessor,
     ) {
     }
 
@@ -110,13 +114,15 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 }
                 break;
 
+            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED:
+                $this->restartSubscription($gSubscription, $developerNotification);
+
             // doesn't affect existing payments; new will be created with confirmed price
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PRICE_CHANGE_CONFIRMED:
                 break;
 
             // following notification types do not affect existing subscriptions or payments in CRM
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_ON_HOLD:
-            case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_DEFERRED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED:
@@ -316,7 +322,30 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $metas
         );
 
+        if ($paymentWithPurchaseToken) {
+            $lastRecurrentPayment = $this->recurrentPaymentsRepository->recurrent($paymentWithPurchaseToken);
+            if ($lastRecurrentPayment) {
+                $this->recurrentPaymentsRepository->update($lastRecurrentPayment, [
+                    'payment_id' => $payment->id,
+                ]);
+                $this->recurrentPaymentsProcessor->processChargedRecurrent(
+                    $lastRecurrentPayment,
+                    PaymentsRepository::STATUS_PREPAID,
+                    0,
+                    'NOTIFICATION',
+                );
+
+                return $payment;
+            }
+        }
+
         $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_PREPAID);
+
+        $this->recurrentPaymentsRepository->createFromPayment(
+            $payment,
+            $developerNotification->purchase_token,
+        );
+
         return ($payment ?? null);
     }
 
@@ -369,6 +398,23 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $this->paymentsRepository->updateStatus($paymentWithPurchaseToken, PaymentsRepository::STATUS_REFUND);
         }
 
+        // stop active recurrent
+        $recurrent = $this->recurrentPaymentsRepository->recurrent($paymentWithPurchaseToken);
+        if (!$recurrent || $recurrent->state !== RecurrentPaymentsRepository::STATE_ACTIVE) {
+            $lastRecurrent = $this->recurrentPaymentsRepository->getLastWithState($recurrent, RecurrentPaymentsRepository::STATE_ACTIVE);
+            if ($lastRecurrent) {
+                $recurrent = $lastRecurrent;
+            }
+        }
+        if ($recurrent) {
+            // payment was stopped by user through Google Play store
+            $this->recurrentPaymentsRepository->update($recurrent, [
+                'state' => RecurrentPaymentsRepository::STATE_USER_STOP
+            ]);
+        } else {
+            Debugger::log("Cancelled GooglePlay payment [{$paymentWithPurchaseToken->id}] doesn't have active recurrent payment.", Debugger::WARNING);
+        }
+
         if (!$paymentWithPurchaseToken->subscription) {
             Debugger::log("Missing subscription which should be cancelled. DeveloperNotification ID: [{$developerNotification->id}].", Debugger::ERROR);
             return;
@@ -381,6 +427,53 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 'end_time' => $subscriptionEndAt, // update end date of subscription with information from google
             ]
         );
+    }
+
+    public function restartSubscription(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification)
+    {
+        $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
+        $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($subscriptionResponse);
+
+        // check if any payment with same purchase token was created & load data from it
+        $paymentWithPurchaseToken = $this->paymentsRepository->getTable()
+            ->where([
+                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+                ':payment_meta.value' => $developerNotification->purchase_token,
+                'subscription_start_at >= ?' => $subscriptionStartAt->format('Y-m-d H:i:s'),
+            ])
+            ->order('payments.subscription_end_at DESC')
+            ->fetch();
+
+        if (!$paymentWithPurchaseToken) {
+            throw new DoNotRetryException("Unable to find payment with purchase token [{$developerNotification->purchase_token}] and start date [{$subscriptionStartAt->format('Y-m-d H:i:s')}].");
+        }
+
+        $this->paymentMetaRepository->add($paymentWithPurchaseToken, 'restart_datetime', new DateTime(), true);
+
+        $restartNote = "Subscription restarted.";
+        $paymentNote = !empty($paymentWithPurchaseToken->note) ? $paymentWithPurchaseToken->note . " | " : "";
+        $this->paymentsRepository->update(
+            $paymentWithPurchaseToken,
+            [
+                'note' => $paymentNote . $restartNote,
+            ]
+        );
+
+        // restart recurrent
+        $recurrent = $this->recurrentPaymentsRepository->recurrent($paymentWithPurchaseToken);
+        if ($recurrent) {
+            // payment was stopped by user through Google Play store
+            $this->recurrentPaymentsRepository->update($recurrent, [
+                'state' => RecurrentPaymentsRepository::STATE_ACTIVE
+            ]);
+        } else {
+            Debugger::log("Restarted GooglePlay payment [{$paymentWithPurchaseToken->id}] doesn't have stopped recurrent payment. Creating new recurrent.", Debugger::WARNING);
+
+            $this->recurrentPaymentsRepository->createFromPayment(
+                $paymentWithPurchaseToken,
+                $developerNotification->purchase_token,
+            );
+        }
     }
 
     public function createGoogleFreeTrialSubscription(

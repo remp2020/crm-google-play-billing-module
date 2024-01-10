@@ -12,6 +12,7 @@ services:
 	- Crm\GooglePlayBillingModule\Api\DeveloperNotificationPushWebhookApiHandler
 	- Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler
 	- Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand
+	- Crm\GooglePlayBillingModule\Commands\CreateMissingRecurrentPaymentsCommand
 	- Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget
 	- Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider
 	- Crm\GooglePlayBillingModule\DataProviders\ExternalIdAdminFilterFormDataProvider
