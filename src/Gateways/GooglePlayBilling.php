@@ -14,14 +14,17 @@ use Crm\PaymentsModule\RecurrentPaymentFailStop;
 use Crm\PaymentsModule\RecurrentPaymentFailTry;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Nette\Application\LinkGenerator;
+use Nette\Database\Table\ActiveRow;
 use Nette\Http\Response;
 use Nette\Localization\Translator;
 use Omnipay\Common\Exception\InvalidRequestException;
 use ReceiptValidator\GooglePlay\PurchaseResponse;
 use Tracy\Debugger;
+use Tracy\ILogger;
 
 class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInterface, ExternallyChargedRecurrentPaymentInterface
 {
@@ -46,6 +49,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         private PaymentMetaRepository $paymentMetaRepository,
         private SubscriptionsRepository $subscriptionsRepository,
         private SubscriptionMetaRepository $subscriptionMetaRepository,
+        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
     ) {
         parent::__construct($linkGenerator, $applicationConfig, $httpResponse, $translator);
     }
@@ -141,6 +145,27 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
 
         $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($gSubscription);
         $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($gSubscription);
+
+        // load end_date of last subscription
+        $recurrentPayment = $this->recurrentPaymentsRepository->findByPayment($payment);
+
+        // traverse to the latest successful parent payment
+        /** @var ActiveRow $parentPayment */
+        $parentPayment = $this->recurrentPaymentsRepository
+            ->latestSuccessfulRecurrentPayment($recurrentPayment)
+            ->parent_payment ?? null;
+
+        if (!isset($parentPayment->subscription_id)) {
+            // TODO: can be this fixed before next tries?
+            Debugger::log("Unable to find previous subscription for payment ID [{$payment->id}], cannot determine if it was renewed.", ILogger::ERROR);
+            throw new RecurrentPaymentFailTry();
+        }
+
+        $subscriptionEndDate = $parentPayment->subscription->end_time;
+//        $receiptExpiration = $this->getSubscriptionExpiration($originalTransactionID);
+        if ($subscriptionEndAt <= $subscriptionEndDate || $subscriptionEndAt < new \DateTime()) {
+            throw new RecurrentPaymentFailTry();
+        }
 
         // make sure the created subscription matches Google's purchase/expiration dates
         $this->paymentsRepository->update($payment, [
