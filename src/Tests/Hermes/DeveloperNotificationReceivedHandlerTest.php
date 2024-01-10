@@ -18,6 +18,7 @@ use Crm\PaymentsModule\Repository\PaymentItemsRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
+use Crm\PaymentsModule\Seeders\ConfigsSeeder as PaymentsConfigsSeeder;
 use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
@@ -104,6 +105,7 @@ class DeveloperNotificationReceivedHandlerTest extends DatabaseTestCase
             SubscriptionLengthMethodSeeder::class,
             SubscriptionTypeNamesSeeder::class,
             ApplicationConfigsSeeder::class,
+            PaymentsConfigsSeeder::class,
         ];
     }
 

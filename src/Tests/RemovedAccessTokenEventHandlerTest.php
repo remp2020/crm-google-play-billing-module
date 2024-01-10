@@ -26,6 +26,7 @@ use Crm\UsersModule\Repositories\DeviceTokensRepository;
 use Crm\UsersModule\Repository\AccessTokensRepository;
 use Crm\UsersModule\Repository\UsersRepository;
 use Nette\Database\Table\ActiveRow;
+use Crm\SubscriptionsModule\Seeders\ConfigSeeder as SubscriptionsConfigSeeder;
 
 class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
 {
@@ -75,7 +76,8 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         return [
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
-            \Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder::class
+            \Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder::class,
+            SubscriptionsConfigSeeder::class,
         ];
     }
 

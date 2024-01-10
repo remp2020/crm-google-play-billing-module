@@ -16,6 +16,7 @@ use Crm\PaymentsModule\Repository\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentItemsRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Seeders\ConfigsSeeder as PaymentsConfigsSeeder;
 use Crm\SubscriptionsModule\Builder\SubscriptionTypeBuilder;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
@@ -97,6 +98,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
             SubscriptionTypeNamesSeeder::class,
+            PaymentsConfigsSeeder::class,
         ];
     }
 
@@ -824,9 +826,8 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
 
         // handler returns only bool value; check expected log for result (nothing logged)
         $mockLogger = $this->createMock(ILogger::class);
-        // check in tests
-//        $mockLogger->expects($this->never())
-//            ->method('log');
+        $mockLogger->expects($this->never())
+            ->method('log');
         Debugger::setLogger($mockLogger);
 
         $result = $this->developerNotificationReceivedHandler->handle($hermesMessageGracePeriod);
