@@ -162,8 +162,13 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         }
 
         $subscriptionEndDate = $parentPayment->subscription->end_time;
-//        $receiptExpiration = $this->getSubscriptionExpiration($originalTransactionID);
-        if ($subscriptionEndAt <= $subscriptionEndDate || $subscriptionEndAt < new \DateTime()) {
+        // Google stores milliseconds in datetime, we don't
+        $subscriptionEndAtZeroMillis = (clone $subscriptionEndAt)->setTime(
+            $subscriptionEndAt->format('H'),
+            $subscriptionEndAt->format('i'),
+            $subscriptionEndAt->format('s')
+        );
+        if ($subscriptionEndAtZeroMillis <= $subscriptionEndDate || $subscriptionEndAtZeroMillis < new \DateTime()) {
             throw new RecurrentPaymentFailTry();
         }
 
