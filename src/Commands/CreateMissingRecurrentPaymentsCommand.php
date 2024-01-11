@@ -234,11 +234,22 @@ class CreateMissingRecurrentPaymentsCommand extends Command
     private function calculateChargeAt($payment)
     {
         $subscription = $payment->subscription;
+        $subscriptionType = $payment->subscription_type;
 
         if (!$subscription) {
             $endTime = (clone $payment->paid_at)->add(new \DateInterval("P{$payment->subscription_type->length}D"));
         } else {
             $endTime = clone $subscription->end_time;
+        }
+
+        $chargeBefore = $subscriptionType->recurrent_charge_before;
+        if ($chargeBefore) {
+            if ($chargeBefore < 0) {
+                $chargeBefore = abs($chargeBefore);
+                $endTime->add(new \DateInterval("PT{$chargeBefore}H"));
+            } else {
+                $endTime->sub(new \DateInterval("PT{$chargeBefore}H"));
+            }
         }
 
         return $endTime;
