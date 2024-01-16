@@ -2,10 +2,10 @@
   "name": "remp/crm-google-play-billing-module",
   "description": "CRM GooglePlay Billing Module",
   "type": "library",
-  "homepage": "https://remp2020.com",
+  "homepage": "https://remp2030.com",
   "license": "MIT",
   "require": {
-    "php": "^8.0",
+    "php": "^8.1",
     "aporat/store-receipt-validator": "^4.2",
     "google/apiclient": "^2.9"
   },
