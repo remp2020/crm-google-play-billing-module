@@ -4,8 +4,8 @@ namespace Crm\GooglePlayBillingModule\Api;
 
 use Crm\ApiModule\Models\Api\ApiHandler;
 use Crm\ApiModule\Models\Api\JsonValidationTrait;
-use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
-use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
+use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
+use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
 use Nette\Http\Response;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;

@@ -4,9 +4,9 @@ namespace Crm\GooglePlayBillingModule\Gateways;
 
 use Crm\ApplicationModule\Config\ApplicationConfig;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
-use Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory;
-use Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessorInterface;
-use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
+use Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory;
+use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\SubscriptionResponseProcessorInterface;
+use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\PaymentsModule\Gateways\ExternallyChargedRecurrentPaymentInterface;
 use Crm\PaymentsModule\Gateways\GatewayAbstract;
 use Crm\PaymentsModule\Gateways\RecurrentPaymentInterface;

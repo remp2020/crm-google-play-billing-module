@@ -4,10 +4,10 @@ namespace Crm\GooglePlayBillingModule\Hermes;
 
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
-use Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory;
-use Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessorInterface;
-use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
-use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository;
+use Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory;
+use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\SubscriptionResponseProcessorInterface;
+use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
+use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\RecurrentPaymentsProcessor;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;

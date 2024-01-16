@@ -7,13 +7,13 @@ services:
 		setup:
 			- registerGateway(@Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling::GATEWAY_CODE, Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling)
 
-	subscriptionResponseProcessor: Crm\GooglePlayBillingModule\Model\SubscriptionResponseProcessor
+	subscriptionResponseProcessor: Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\SubscriptionResponseProcessor
 
 	- Crm\GooglePlayBillingModule\Api\DeveloperNotificationPushWebhookApiHandler
 	- Crm\GooglePlayBillingModule\Api\VerifyPurchaseApiHandler
 	- Crm\GooglePlayBillingModule\Commands\RevalidateDeveloperNotificationCommand
 	- Crm\GooglePlayBillingModule\Commands\CreateMissingRecurrentPaymentsCommand
-	- Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget
+	- Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget\StopRecurrentPaymentButtonWidget
 	- Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider
 	- Crm\GooglePlayBillingModule\DataProviders\ExternalIdAdminFilterFormDataProvider
 	- Crm\GooglePlayBillingModule\DataProviders\ExternalIdUniversalSearchDataProvider
@@ -22,12 +22,12 @@ services:
 	- Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler
 	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
 	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)
-	googlePlayValidatorFactory: Crm\GooglePlayBillingModule\Model\GooglePlayValidatorFactory
-	- Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository
-	- Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository
-	- Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository
-	- Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository
+	googlePlayValidatorFactory: Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory
+	- Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository
+	- Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository
+	- Crm\GooglePlayBillingModule\Repositories\PurchaseDeviceTokensRepository
+	- Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository
 	- Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder
 	- Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder
 	- Crm\GooglePlayBillingModule\Seeders\SnippetsSeeder
-	- Crm\GooglePlayBillingModule\User\GooglePlayUserDataProvider
+	- Crm\GooglePlayBillingModule\Models\User\GooglePlayUserDataProvider

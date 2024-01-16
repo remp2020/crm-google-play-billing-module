@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Tests;
 
-use Crm\GooglePlayBillingModule\Model\SubscriptionResponseDateTimesTrait;
+use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\SubscriptionResponseDateTimesTrait;
 use Mockery\MockInterface;
 use Nette\Utils\DateTime;
 use PHPUnit\Framework\TestCase;

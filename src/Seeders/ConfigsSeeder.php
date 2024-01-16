@@ -8,7 +8,7 @@ use Crm\ApplicationModule\Config\Repository\ConfigCategoriesRepository;
 use Crm\ApplicationModule\Config\Repository\ConfigsRepository;
 use Crm\ApplicationModule\Seeders\ConfigsTrait;
 use Crm\ApplicationModule\Seeders\ISeeder;
-use Crm\GooglePlayBillingModule\Model\Config;
+use Crm\GooglePlayBillingModule\Models\Config;
 use Nette\Database\Table\ActiveRow;
 use Symfony\Component\Console\Output\OutputInterface;
 

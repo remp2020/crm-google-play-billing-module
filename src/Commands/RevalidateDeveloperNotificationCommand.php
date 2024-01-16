@@ -3,7 +3,7 @@
 namespace Crm\GooglePlayBillingModule\Commands;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
-use Crm\GooglePlayBillingModule\Repository\DeveloperNotificationsRepository;
+use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
