@@ -14,6 +14,7 @@ use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Exception;
+use GuzzleHttp\Exception\GuzzleException;
 use Nette\Localization\Translator;
 use ReceiptValidator\GooglePlay\Validator;
 
@@ -145,7 +146,7 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
                     }
 
                     throw new Exception("Unable to validate Google Play payment. Error: [{$e->getMessage()}]");
-                } catch (Exception | \GuzzleHttp\Exception\GuzzleException $e) {
+                } catch (Exception | GuzzleException $e) {
                     throw new Exception("Unable to validate Google Play payment. Error: [{$e->getMessage()}]");
                 }
 

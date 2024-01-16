@@ -9,6 +9,7 @@ use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
+use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentItemMetaRepository;
@@ -76,7 +77,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         return [
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
-            \Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder::class,
+            PaymentGatewaysSeeder::class,
             SubscriptionsConfigSeeder::class,
         ];
     }

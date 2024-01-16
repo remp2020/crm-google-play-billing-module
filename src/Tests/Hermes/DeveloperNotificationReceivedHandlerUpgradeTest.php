@@ -12,6 +12,8 @@ use Crm\GooglePlayBillingModule\Repository\GooglePlaySubscriptionTypesRepository
 use Crm\GooglePlayBillingModule\Repository\PurchaseDeviceTokensRepository;
 use Crm\GooglePlayBillingModule\Repository\PurchaseTokensRepository;
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
+use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
+use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
 use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentItemsRepository;
@@ -140,10 +142,10 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         /** @var Emitter $emitter */
         $emitter = $this->inject(Emitter::class);
         // clear initialized handlers (we do not want duplicated listeners)
-        $emitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
+        $emitter->removeAllListeners(PaymentChangeStatusEvent::class);
         $emitter->addListener(
-            \Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class,
-            $this->inject(\Crm\PaymentsModule\Events\PaymentStatusChangeHandler::class)
+            PaymentChangeStatusEvent::class,
+            $this->inject(PaymentStatusChangeHandler::class)
         );
     }
 
@@ -151,7 +153,7 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
     {
         /** @var Emitter $emitter */
         $emitter = $this->inject(Emitter::class);
-        $emitter->removeAllListeners(\Crm\PaymentsModule\Events\PaymentChangeStatusEvent::class);
+        $emitter->removeAllListeners(PaymentChangeStatusEvent::class);
 
         parent::tearDown();
     }

@@ -4,6 +4,7 @@ namespace Crm\GooglePlayBillingModule\Tests;
 
 use Crm\ApplicationModule\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
+use Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
 use Crm\UsersModule\Repository\AccessTokensRepository;
@@ -49,7 +50,7 @@ class AccessTokenDataProviderTest extends DatabaseTestCase
         $dataProviderManager = $this->inject(DataProviderManager::class);
         $dataProviderManager->registerDataProvider(
             'users.dataprovider.access_tokens',
-            $this->inject(\Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider::class)
+            $this->inject(AccessTokenDataProvider::class)
         );
     }
 
