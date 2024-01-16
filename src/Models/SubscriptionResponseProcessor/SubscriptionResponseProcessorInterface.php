@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\Model;
+namespace Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor;
 
 use Crm\GooglePlayBillingModule\Hermes\DoNotRetryException;
 use Nette\Database\Table\ActiveRow;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\Repository;
+namespace Crm\GooglePlayBillingModule\Repositories;
 
 use Crm\ApplicationModule\Repository;
 use Nette\Database\Table\ActiveRow;

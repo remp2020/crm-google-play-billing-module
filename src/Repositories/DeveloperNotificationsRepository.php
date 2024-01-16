@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\Repository;
+namespace Crm\GooglePlayBillingModule\Repositories;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Repository;

@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\Components;
+namespace Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget;
 
 use Crm\ApplicationModule\Widget\BaseLazyWidget;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;

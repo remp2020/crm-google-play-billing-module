@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\User;
+namespace Crm\GooglePlayBillingModule\Models\User;
 
 use Crm\ApplicationModule\Config\Repository\ConfigsRepository;
 use Crm\ApplicationModule\User\UserDataProviderInterface;

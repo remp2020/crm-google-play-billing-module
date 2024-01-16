@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\Model;
+namespace Crm\GooglePlayBillingModule\Models;
 
 class Config
 {

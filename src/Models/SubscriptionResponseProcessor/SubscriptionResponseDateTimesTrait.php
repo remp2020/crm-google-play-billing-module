@@ -1,6 +1,6 @@
 <?php
 
-namespace Crm\GooglePlayBillingModule\Model;
+namespace Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor;
 
 use Nette\Utils\DateTime;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
