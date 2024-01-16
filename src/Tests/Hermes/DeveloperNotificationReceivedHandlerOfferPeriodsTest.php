@@ -2,6 +2,8 @@
 
 namespace Crm\GooglePlayBillingModule\Tests\Hermes;
 
+use Crm\ApplicationModule\Config\Repository\ConfigCategoriesRepository;
+use Crm\ApplicationModule\Config\Repository\ConfigsRepository;
 use Crm\ApplicationModule\Hermes\HermesMessage;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
@@ -23,6 +25,7 @@ use Crm\SubscriptionsModule\Repository\SubscriptionTypeItemsRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypeNamesRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\SubscriptionsModule\Seeders\ConfigSeeder as SubscriptionsConfigSeeder;
 use Crm\SubscriptionsModule\Seeders\SubscriptionExtensionMethodsSeeder;
 use Crm\SubscriptionsModule\Seeders\SubscriptionLengthMethodSeeder;
 use Crm\SubscriptionsModule\Seeders\SubscriptionTypeNamesSeeder;
@@ -84,6 +87,8 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
             PaymentItemsRepository::class,
             PaymentItemMetaRepository::class,
             UsersRepository::class,
+            ConfigCategoriesRepository::class,
+            ConfigsRepository::class,
         ];
     }
 
@@ -94,6 +99,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
             SubscriptionExtensionMethodsSeeder::class,
             SubscriptionLengthMethodSeeder::class,
             SubscriptionTypeNamesSeeder::class,
+            SubscriptionsConfigSeeder::class,
         ];
     }
 
