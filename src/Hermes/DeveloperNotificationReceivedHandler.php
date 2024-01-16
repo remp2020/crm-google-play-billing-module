@@ -19,6 +19,7 @@ use Crm\SubscriptionsModule\Repository\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\DateTime;
+use Nette\Utils\Json;
 use Psr\Log\LoggerAwareTrait;
 use ReceiptValidator\GooglePlay\Acknowledger;
 use ReceiptValidator\GooglePlay\SubscriptionResponse;
@@ -69,6 +70,10 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             ->setPurchaseToken($developerNotification->purchase_token)
             ->setProductId($developerNotification->subscription_id)
             ->validateSubscription();
+
+        $this->developerNotificationsRepository->update($developerNotification, [
+            'subscription_purchase' => Json::encode($gSubscription->getRawResponse()->toSimpleObject()),
+        ]);
 
         switch ($developerNotification->notification_type) {
             // following notification types will create payment with subscription
