@@ -3,7 +3,7 @@
 namespace Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
-use Crm\PaymentsModule\Repository\PaymentMetaRepository;
+use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\UsersModule\Models\User\UnclaimedUser;
 use Crm\UsersModule\Repositories\UserMetaRepository;
 use Crm\UsersModule\Repositories\UsersRepository;

@@ -3,8 +3,8 @@
 namespace Crm\GooglePlayBillingModule\DataProviders;
 
 use Crm\ApplicationModule\DataProvider\DataProviderException;
-use Crm\PaymentsModule\DataProvider\AdminFilterFormDataProviderInterface;
-use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\DataProviders\AdminFilterFormDataProviderInterface;
+use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Nette\Application\UI\Form;
 use Nette\Database\Table\Selection;
 

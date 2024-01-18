@@ -12,11 +12,11 @@ use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\Subscriptio
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\GooglePlayBillingModule\Repositories\PurchaseDeviceTokensRepository;
 use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
-use Crm\PaymentsModule\PaymentItem\PaymentItemContainer;
-use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
-use Crm\PaymentsModule\Repository\PaymentMetaRepository;
-use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
+use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
+use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
+use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
+use Crm\PaymentsModule\Repositories\PaymentsRepository;
+use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Crm\SubscriptionsModule\Models\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\UsersModule\Models\Auth\UserTokenAuthorization;
 use Crm\UsersModule\Models\User\UnclaimedUser;

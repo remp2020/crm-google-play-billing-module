@@ -3,7 +3,7 @@
 namespace Crm\GooglePlayBillingModule\Events;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
-use Crm\PaymentsModule\Repository\PaymentMetaRepository;
+use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\UsersModule\Events\RemovedAccessTokenEvent;
 use Crm\UsersModule\Repositories\AccessTokensRepository;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;

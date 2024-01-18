@@ -4,7 +4,7 @@ namespace Crm\GooglePlayBillingModule\Seeders;
 
 use Crm\ApplicationModule\Seeders\ISeeder;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
-use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
+use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Symfony\Component\Console\Output\OutputInterface;
 
 class PaymentGatewaysSeeder implements ISeeder

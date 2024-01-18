@@ -5,7 +5,7 @@ namespace Crm\GooglePlayBillingModule\DataProviders;
 use Contributte\Translation\Translator;
 use Crm\AdminModule\Models\UniversalSearchDataProviderInterface;
 use Crm\ApplicationModule\Helpers\UserDateHelper;
-use Crm\PaymentsModule\Repository\PaymentsRepository;
+use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Nette\Application\LinkGenerator;
 
 class ExternalIdUniversalSearchDataProvider implements UniversalSearchDataProviderInterface
