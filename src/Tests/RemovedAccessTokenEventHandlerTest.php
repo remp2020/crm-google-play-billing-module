@@ -22,11 +22,11 @@ use Crm\SubscriptionsModule\Repositories\SubscriptionTypesRepository;
 use Crm\SubscriptionsModule\Seeders\ConfigSeeder as SubscriptionsConfigSeeder;
 use Crm\SubscriptionsModule\Seeders\SubscriptionExtensionMethodsSeeder;
 use Crm\SubscriptionsModule\Seeders\SubscriptionLengthMethodSeeder;
-use Crm\UsersModule\Auth\UserManager;
 use Crm\UsersModule\Events\RemovedAccessTokenEvent;
+use Crm\UsersModule\Models\Auth\UserManager;
+use Crm\UsersModule\Repositories\AccessTokensRepository;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
-use Crm\UsersModule\Repository\AccessTokensRepository;
-use Crm\UsersModule\Repository\UsersRepository;
+use Crm\UsersModule\Repositories\UsersRepository;
 use Nette\Database\Table\ActiveRow;
 
 class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase

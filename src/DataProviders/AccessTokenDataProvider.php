@@ -3,7 +3,7 @@
 namespace Crm\GooglePlayBillingModule\DataProviders;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
-use Crm\UsersModule\DataProvider\AccessTokenDataProviderInterface;
+use Crm\UsersModule\DataProviders\AccessTokenDataProviderInterface;
 use Nette\Database\Table\ActiveRow;
 
 class AccessTokenDataProvider implements AccessTokenDataProviderInterface

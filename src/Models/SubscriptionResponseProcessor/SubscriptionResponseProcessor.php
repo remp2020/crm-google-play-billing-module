@@ -4,9 +4,9 @@ namespace Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
-use Crm\UsersModule\Repository\UserMetaRepository;
-use Crm\UsersModule\Repository\UsersRepository;
-use Crm\UsersModule\User\UnclaimedUser;
+use Crm\UsersModule\Models\User\UnclaimedUser;
+use Crm\UsersModule\Repositories\UserMetaRepository;
+use Crm\UsersModule\Repositories\UsersRepository;
 use Nette\Database\Table\ActiveRow;
 use Nette\Utils\Json;
 use Nette\Utils\Random;

@@ -30,9 +30,9 @@ use Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder;
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\GooglePlayBillingModule\Seeders\SnippetsSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
-use Crm\UsersModule\Auth\UserTokenAuthorization;
 use Crm\UsersModule\Events\PairDeviceAccessTokensEvent;
 use Crm\UsersModule\Events\RemovedAccessTokenEvent;
+use Crm\UsersModule\Models\Auth\UserTokenAuthorization;
 use Tomaj\Hermes\Dispatcher;
 
 class GooglePlayBillingModule extends CrmModule

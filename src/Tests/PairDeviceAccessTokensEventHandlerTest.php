@@ -6,11 +6,11 @@ use Crm\ApplicationModule\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler;
 use Crm\UsersModule\Events\PairDeviceAccessTokensEvent;
+use Crm\UsersModule\Models\User\UnclaimedUser;
+use Crm\UsersModule\Repositories\AccessTokensRepository;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
-use Crm\UsersModule\Repository\AccessTokensRepository;
-use Crm\UsersModule\Repository\UserMetaRepository;
-use Crm\UsersModule\Repository\UsersRepository;
-use Crm\UsersModule\User\UnclaimedUser;
+use Crm\UsersModule\Repositories\UserMetaRepository;
+use Crm\UsersModule\Repositories\UsersRepository;
 
 class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
 {
