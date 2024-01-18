@@ -5,7 +5,7 @@ namespace Crm\GooglePlayBillingModule\Events;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\PaymentsModule\Events\PaymentEventInterface;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
-use Crm\SubscriptionsModule\Repository\SubscriptionsRepository;
+use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use League\Event\AbstractListener;
 use League\Event\EventInterface;
 

@@ -17,7 +17,7 @@ use Crm\PaymentsModule\Repository\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repository\PaymentMetaRepository;
 use Crm\PaymentsModule\Repository\PaymentsRepository;
 use Crm\PaymentsModule\Repository\RecurrentPaymentsRepository;
-use Crm\SubscriptionsModule\PaymentItem\SubscriptionTypePaymentItem;
+use Crm\SubscriptionsModule\Models\PaymentItem\SubscriptionTypePaymentItem;
 use Crm\UsersModule\Auth\UserTokenAuthorization;
 use Crm\UsersModule\Repositories\DeviceTokensRepository;
 use Crm\UsersModule\Repository\AccessTokensRepository;
