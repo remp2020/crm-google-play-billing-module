@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\DataProviders;
 
-use Crm\ApplicationModule\DataProvider\DataProviderException;
+use Crm\ApplicationModule\Models\DataProvider\DataProviderException;
 use Crm\PaymentsModule\DataProviders\AdminFilterFormDataProviderInterface;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Nette\Application\UI\Form;

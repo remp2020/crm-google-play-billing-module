@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Gateways;
 
-use Crm\ApplicationModule\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Config\ApplicationConfig;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\SubscriptionResponseProcessorInterface;

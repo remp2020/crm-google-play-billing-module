@@ -2,8 +2,8 @@
 
 namespace Crm\GooglePlayBillingModule\Models\User;
 
-use Crm\ApplicationModule\Config\Repository\ConfigsRepository;
-use Crm\ApplicationModule\User\UserDataProviderInterface;
+use Crm\ApplicationModule\Models\User\UserDataProviderInterface;
+use Crm\ApplicationModule\Repositories\ConfigsRepository;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Models\Config;

@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Commands;
 
-use Crm\ApplicationModule\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Config\ApplicationConfig;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;

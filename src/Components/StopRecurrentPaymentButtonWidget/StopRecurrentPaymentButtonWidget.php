@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Components\StopRecurrentPaymentButtonWidget;
 
-use Crm\ApplicationModule\Widget\BaseLazyWidget;
+use Crm\ApplicationModule\Models\Widget\BaseLazyWidget;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 
 class StopRecurrentPaymentButtonWidget extends BaseLazyWidget

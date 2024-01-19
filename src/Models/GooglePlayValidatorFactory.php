@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Models;
 
-use Crm\ApplicationModule\Config\ApplicationConfig;
+use Crm\ApplicationModule\Models\Config\ApplicationConfig;
 use Google\Client;
 use Google\Service\AndroidPublisher;
 use ReceiptValidator\GooglePlay\Validator;

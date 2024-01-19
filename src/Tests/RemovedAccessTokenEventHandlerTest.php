@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Tests;
 
-use Crm\ApplicationModule\Event\LazyEventEmitter;
+use Crm\ApplicationModule\Models\Event\LazyEventEmitter;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler;
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;

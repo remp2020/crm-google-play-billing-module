@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Repositories;
 
-use Crm\ApplicationModule\Repository;
+use Crm\ApplicationModule\Models\Database\Repository;
 use Nette\Database\Table\ActiveRow;
 
 class GooglePlaySubscriptionTypesRepository extends Repository

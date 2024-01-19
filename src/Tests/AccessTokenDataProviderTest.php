@@ -2,7 +2,7 @@
 
 namespace Crm\GooglePlayBillingModule\Tests;
 
-use Crm\ApplicationModule\DataProvider\DataProviderManager;
+use Crm\ApplicationModule\Models\DataProvider\DataProviderManager;
 use Crm\ApplicationModule\Tests\DatabaseTestCase;
 use Crm\GooglePlayBillingModule\DataProviders\AccessTokenDataProvider;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
