@@ -405,7 +405,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         // stop active recurrent
         $recurrent = $this->recurrentPaymentsRepository->recurrent($paymentWithPurchaseToken);
-        if (!$recurrent || $recurrent->state !== RecurrentPaymentsRepository::STATE_ACTIVE) {
+        if ($recurrent && $recurrent->state !== RecurrentPaymentsRepository::STATE_ACTIVE) {
             $lastRecurrent = $this->recurrentPaymentsRepository->getLastWithState($recurrent, RecurrentPaymentsRepository::STATE_ACTIVE);
             if ($lastRecurrent) {
                 $recurrent = $lastRecurrent;
