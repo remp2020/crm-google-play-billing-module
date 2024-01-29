@@ -627,6 +627,11 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         // Handle case when introductory subscription type is different from renewals.
         if ($googlePlaySubscriptionType->subscription_type->next_subscription_type_id) {
+            // subscription was NOT purchased with an introductory price
+            if (is_null($subscriptionResponse->getRawResponse()->getIntroductoryPriceInfo())) {
+                return $googlePlaySubscriptionType->subscription_type->next_subscription_type;
+            }
+
             $usedOfferPeriods = $this->getUsedOfferPeriods($subscriptionResponse->getRawResponse()->getOrderId());
             // used all offer periods
             // if offer periods not set -> there is 1 offer period and we have used it already

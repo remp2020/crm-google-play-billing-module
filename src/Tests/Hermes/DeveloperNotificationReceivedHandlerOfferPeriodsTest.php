@@ -173,6 +173,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $payment = $this->paymentsRepository->getTable()->fetch();
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
         $this->assertEquals($googleSubscriptionType->subscription_type_id, $payment->subscription_type_id);
+        $this->assertEquals($googleSubscriptionType->subscription_type->price, $payment->amount);
 
         // check payment meta against order id and purchase token
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->findByPurchaseToken($purchaseToken);
@@ -249,6 +250,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         // check new payment (second) & meta against second purchase
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentSecondPurchase->status);
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->id, $paymentSecondPurchase->subscription_type_id);
+        $this->assertEquals($subscriptionTypeAfterOfferPeriods->price, $paymentSecondPurchase->amount);
 
         $subscriptionSecondPurchase = $paymentSecondPurchase->subscription;
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->id, $subscriptionSecondPurchase->subscription_type_id);
@@ -300,6 +302,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         // check new payment (second) & meta against second purchase
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentSecondPurchase->status);
         $this->assertEquals($googleSubscriptionType->subscription_type_id, $paymentSecondPurchase->subscription_type_id);
+        $this->assertEquals($googleSubscriptionType->subscription_type->price, $paymentSecondPurchase->amount);
 
         /* ************************************************************ *
          * THIRD PURCHASE ********************************************* *
@@ -332,6 +335,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         // check third payment & meta against third purchase
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentThirdPurchase->status);
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->id, $paymentThirdPurchase->subscription_type_id);
+        $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type->price, $paymentThirdPurchase->amount);
 
         $subscriptionSecondPurchase = $paymentThirdPurchase->subscription;
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->id, $subscriptionSecondPurchase->subscription_type_id);
@@ -339,6 +343,115 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $this->assertEquals($expiryTimeMillisPurchase, $paymentThirdPurchase->subscription_end_at);
         $this->assertEquals($startTimeMillisPurchase, $subscriptionSecondPurchase->start_time);
         $this->assertEquals($expiryTimeMillisPurchase, $subscriptionSecondPurchase->end_time);
+    }
+
+    public function testPurchaseNoIntroductoryPriceEligable()
+    {
+        $this->assertEquals(0, $this->paymentsRepository->totalCount());
+        $this->assertEquals(0, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(0, $this->paymentMetaRepository->totalCount());
+
+        $purchaseTokenString = 'purchase_token_' . Random::generate();
+        $orderId = 'GPA.1111-1111-1111-11111';
+        $googleSubscriptionType = $this->getGooglePlaySubscriptionTypeWeb();
+        $startTimeMillisPurchase = new DateTime('2030-04-27 19:20:57');
+        $expiryTimeMillisPurchase = new DateTime('2030-05-27 19:20:57');
+
+        $purchaseToken = $this->purchaseTokensRepository->add(
+            $purchaseTokenString,
+            $this->googlePlayPackage,
+            $googleSubscriptionType->subscription_id
+        );
+        $developerNotificationPurchase = $this->developerNotificationsRepository->add(
+            $purchaseToken,
+            new DateTime(),
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+        );
+        $hermesMessagePurchase = new HermesMessage(
+            'developer-notification-received',
+            [
+                'developer_notification_id' => $developerNotificationPurchase->getPrimary(),
+            ],
+        );
+
+        $priceAmountMicrosPurchase = $googleSubscriptionType->subscription_type->next_subscription_type->price * 1000000;
+        // no introductory price info in JSON -> subscription was NOT purchased with an introductory price.
+        $googleResponsePurchase = <<<JSON
+{
+    "acknowledgementState": 1,
+    "autoRenewing": true,
+    "autoResumeTimeMillis": null,
+    "cancelReason": null,
+    "countryCode": "SK",
+    "developerPayload": "",
+    "emailAddress": null,
+    "expiryTimeMillis": "{$expiryTimeMillisPurchase->format('Uv')}",
+    "externalAccountId": null,
+    "familyName": null,
+    "givenName": null,
+    "kind": "androidpublisher#subscriptionPurchase",
+    "linkedPurchaseToken": null,
+    "obfuscatedExternalAccountId": "{$this->getUser()->id}",
+    "obfuscatedExternalProfileId": null,
+    "orderId": "{$orderId}",
+    "paymentState": 1,
+    "priceAmountMicros": "{$priceAmountMicrosPurchase}",
+    "priceCurrencyCode": "EUR",
+    "profileId": null,
+    "profileName": null,
+    "promotionCode": null,
+    "promotionType": null,
+    "purchaseType": null,
+    "startTimeMillis": "{$startTimeMillisPurchase->format('Uv')}",
+    "userCancellationTimeMillis": null
+}
+JSON;
+
+        $this->injectSubscriptionResponseIntoGooglePlayValidatorMock($googleResponsePurchase);
+
+        $this->developerNotificationReceivedHandler->handle($hermesMessagePurchase);
+
+        // developer notification marked as processed
+        $developerNotificationFirstPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationPurchase->id);
+        $this->assertEquals(
+            DeveloperNotificationsRepository::STATUS_PROCESSED,
+            $developerNotificationFirstPurchaseUpdated->status
+        );
+
+        // payment, payment_meta and subscription created
+        $this->assertEquals(1, $this->paymentsRepository->totalCount());
+        $this->assertEquals(1, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(3, $this->paymentMetaRepository->totalCount());
+
+        // payment status & subscription_type checks
+        $payment = $this->paymentsRepository->getTable()->fetch();
+        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type_id, $payment->subscription_type_id);
+        $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type->price, $payment->amount);
+
+        // check payment meta against order id and purchase token
+        $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->findByPurchaseToken($purchaseTokenString);
+        $this->assertEquals(
+            $purchaseTokenFirstPurchase->purchase_token,
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+        );
+        $this->assertEquals(
+            $developerNotificationPurchase->id,
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_developer_notification_id')->value
+        );
+        $this->assertEquals(
+            $orderId,
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+        );
+
+        // check subscription type & start/end times against Google play validation response
+        $subscription = $this->subscriptionsRepository->getTable()->fetch();
+        $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type_id, $subscription->subscription_type_id);
+        $this->assertEquals($startTimeMillisPurchase, $payment->subscription_start_at);
+        $this->assertEquals($expiryTimeMillisPurchase, $payment->subscription_end_at);
+        $this->assertEquals($startTimeMillisPurchase, $subscription->start_time);
+        $this->assertEquals($expiryTimeMillisPurchase, $subscription->end_time);
+        $this->assertEquals($subscription->id, $payment->subscription_id);
     }
 
     /* **************************************************************** *
@@ -388,7 +501,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
             $subscriptionTypeWeb = $this->subscriptionTypeBuilder->createNew()
                 ->setName('Google Pay test subscription WEB month')
                 ->setUserLabel('Google Pay test subscription WEB month')
-                ->setPrice(6.99)
+                ->setPrice(1)
                 ->setCode($subscriptionTypeCodeWeb)
                 ->setLength(31)
                 ->setActive(true)
@@ -445,7 +558,8 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
             ],
         );
 
-        $priceAmountMicrosPurchase = $googleSubscriptionType->subscription_type->price * 1000000;
+        $priceAmountMicrosPurchase = $googleSubscriptionType->subscription_type->next_subscription_type->price * 1000000;
+        $introPriceAmountMicros = $googleSubscriptionType->subscription_type->price * 1000000;
         // acknowledgementState: 1 -> set to acknowledged so we don't need to mock acknowledgement service
         // autoRenewing: true -> first purchase set to create recurrent payment
         $googleResponsePurchase = <<<JSON
@@ -475,7 +589,13 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
     "promotionType": null,
     "purchaseType": null,
     "startTimeMillis": "{$startTimeMillisPurchase->format('Uv')}",
-    "userCancellationTimeMillis": null
+    "userCancellationTimeMillis": null,
+    "introductoryPriceInfo": {
+        "introductoryPriceCycles": 6,
+        "introductoryPricePeriod": "P4W",
+        "introductoryPriceAmountMicros": "{$introPriceAmountMicros}",
+        "introductoryPriceCurrencyCode": "EUR"
+    }
 }
 JSON;
 
