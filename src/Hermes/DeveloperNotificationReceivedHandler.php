@@ -626,6 +626,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         }
 
         // Handle case when introductory subscription type is different from renewals.
+        // TODO [crm#2938]: Google - doesn't need to be in first batch of changes. We should merge new trial_periods with google's offer_periods.
         if ($googlePlaySubscriptionType->subscription_type->next_subscription_type_id) {
             // subscription was NOT purchased with an introductory price
             if (is_null($subscriptionResponse->getRawResponse()->getIntroductoryPriceInfo())) {
