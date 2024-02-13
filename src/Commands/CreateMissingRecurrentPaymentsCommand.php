@@ -166,7 +166,7 @@ class CreateMissingRecurrentPaymentsCommand extends Command
         }
 
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
-            '$recurrentPayment' => RecurrentPaymentsRepository::STATE_USER_STOP,
+            'state' => RecurrentPaymentsRepository::STATE_USER_STOP,
         ]);
     }
 
