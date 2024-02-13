@@ -161,13 +161,25 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 
     private function userStopRecurrent($recurrentPayment): void
     {
+        if ($recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
+            return;
+        }
+
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
-            'state' => RecurrentPaymentsRepository::STATE_USER_STOP,
+            '$recurrentPayment' => RecurrentPaymentsRepository::STATE_USER_STOP,
         ]);
     }
 
     private function systemStopRecurrent($recurrentPayment): void
     {
+        if (in_array(
+            $recurrentPayment->state,
+            [RecurrentPaymentsRepository::STATE_SYSTEM_STOP, RecurrentPaymentsRepository::STATE_CHARGE_FAILED],
+            true
+        )) {
+            return;
+        }
+
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
             'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP,
         ]);
