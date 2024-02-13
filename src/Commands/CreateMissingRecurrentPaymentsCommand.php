@@ -16,7 +16,6 @@ use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
-use Tracy\Debugger;
 
 class CreateMissingRecurrentPaymentsCommand extends Command
 {
@@ -160,19 +159,6 @@ class CreateMissingRecurrentPaymentsCommand extends Command
         return 0;
     }
 
-    private function chargeRecurrent($payment, $lastPayment, $recurrentPayment)
-    {
-        if (!$lastPayment) {
-            Debugger::log(
-                "Trying to charge payment [{$payment->id}] as recurrent without the previous payment",
-                Debugger::WARNING
-            );
-            return;
-        }
-
-        $this->setCharged($recurrentPayment, $payment);
-    }
-
     private function userStopRecurrent($recurrentPayment): void
     {
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
@@ -257,6 +243,10 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 
     private function setCharged($recurrentPayment, $payment): void
     {
+        if ($recurrentPayment->state === RecurrentPaymentsRepository::STATE_CHARGED) {
+            return;
+        }
+
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
             'payment_id' => $payment->id,
             'state' => RecurrentPaymentsRepository::STATE_CHARGED,
