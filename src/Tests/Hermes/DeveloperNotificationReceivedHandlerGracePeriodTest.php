@@ -22,6 +22,7 @@ use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Seeders\ConfigsSeeder as PaymentsConfigsSeeder;
 use Crm\SubscriptionsModule\Models\Builder\SubscriptionTypeBuilder;
+use Crm\SubscriptionsModule\Models\Extension\ExtendSameContentAccess;
 use Crm\SubscriptionsModule\Repositories\SubscriptionMetaRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypeItemsRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionTypeNamesRepository;
@@ -966,7 +967,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
 
         // second subscription starts at payment->paid_at, graceSubscription->end_time <= secondSubscription->start_time
         $this->assertEquals($secondPayment->paid_at, $secondSubscription->start_time);
-        $this->assertLessThanOrEqual($graceSubscription->end_time, $secondSubscription->start_time);
+        $this->assertLessThanOrEqual($secondSubscription->start_time, $graceSubscription->end_time);
 
         // second subscription ends in the same time as end time provided in notification, we store only seconds in DB
         $this->assertEquals(
@@ -1342,6 +1343,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
                 ->setCode($subscriptionTypeCodeWeb)
                 ->setLength(31)
                 ->setActive(true)
+                ->setExtensionMethod(ExtendSameContentAccess::METHOD_CODE)
                 ->save();
         }
         $this->googlePlaySubscriptionTypeWeb = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($googlePlaySubscriptionIdWeb);
