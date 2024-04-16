@@ -25,6 +25,7 @@ use Crm\GooglePlayBillingModule\Events\PairDeviceAccessTokensEventHandler;
 use Crm\GooglePlayBillingModule\Events\PaymentStatusChangeEventHandler;
 use Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler;
 use Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler;
+use Crm\GooglePlayBillingModule\Hermes\VoidedPurchaseNotificationReceivedHandler;
 use Crm\GooglePlayBillingModule\Models\User\GooglePlayUserDataProvider;
 use Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder;
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
@@ -74,6 +75,11 @@ class GooglePlayBillingModule extends CrmModule
         $dispatcher->registerHandler(
             'developer-notification-received',
             $this->getInstance(DeveloperNotificationReceivedHandler::class)
+        );
+
+        $dispatcher->registerHandler(
+            'voided-purchase-notification-received',
+            $this->getInstance(VoidedPurchaseNotificationReceivedHandler::class)
         );
     }
 

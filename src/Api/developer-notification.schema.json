@@ -80,6 +80,9 @@
         },
         "productType": {
           "type": "integer"
+        },
+        "refundType":  {
+          "type": "integer"
         }
       }
     },

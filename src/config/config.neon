@@ -22,11 +22,13 @@ services:
 	- Crm\GooglePlayBillingModule\Events\RemovedAccessTokenEventHandler
 	- Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling
 	- Crm\GooglePlayBillingModule\Hermes\DeveloperNotificationReceivedHandler(@subscriptionResponseProcessor)
+	- Crm\GooglePlayBillingModule\Hermes\VoidedPurchaseNotificationReceivedHandler
 	googlePlayValidatorFactory: Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory
 	- Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository
 	- Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository
 	- Crm\GooglePlayBillingModule\Repositories\PurchaseDeviceTokensRepository
 	- Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository
+	- Crm\GooglePlayBillingModule\Repositories\VoidedPurchaseNotificationsRepository
 	- Crm\GooglePlayBillingModule\Seeders\ConfigsSeeder
 	- Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder
 	- Crm\GooglePlayBillingModule\Seeders\SnippetsSeeder

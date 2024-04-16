@@ -6,6 +6,8 @@ use Crm\ApiModule\Models\Api\ApiHandler;
 use Crm\ApiModule\Models\Api\JsonValidationTrait;
 use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
+use Crm\GooglePlayBillingModule\Repositories\VoidedPurchaseNotificationsRepository;
+use Nette\Http\IResponse;
 use Nette\Http\Response;
 use Nette\Utils\DateTime;
 use Nette\Utils\Json;
@@ -17,17 +19,12 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
 {
     use JsonValidationTrait;
 
-    private $developerNotificationsRepository;
-
-    private $purchaseTokensRepository;
-
     public function __construct(
-        DeveloperNotificationsRepository $developerNotificationsRepository,
-        PurchaseTokensRepository $purchaseTokensRepository
+        private readonly DeveloperNotificationsRepository $developerNotificationsRepository,
+        private readonly PurchaseTokensRepository $purchaseTokensRepository,
+        private readonly VoidedPurchaseNotificationsRepository $voidedPurchaseNotificationsRepository,
     ) {
         parent::__construct();
-        $this->developerNotificationsRepository = $developerNotificationsRepository;
-        $this->purchaseTokensRepository = $purchaseTokensRepository;
     }
 
     public function params(): array
@@ -65,21 +62,42 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             return $this->logAndReturnPayloadError("Only version 1.0 of DeveloperNotification is supported.");
         }
 
-        // ignore void purchase notifications
+        $eventTime = DateTime::createFromFormat(
+            "U.u",
+            sprintf("%.6f", $developerNotification->eventTimeMillis / 1000)
+        );
+        $eventTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
+
+        // store voided purchase notifications
         if (isset($developerNotification->voidedPurchaseNotification)) {
-            // TODO[crm#3031]: save developer notification? Fields of `google_play_billing_developer_notifications`
-            //       follow SubscriptionNotification; we don't have all required fields in VoidedPurchaseNotification.
-            // TODO[crm#3031]: Debug log can be removed when we confirm that OK response is enough for Google to stop sending it.
-            $data = print_r($developerNotification->voidedPurchaseNotification, true);
-            Debugger::log(
-                "VoidedPurchaseNotification received: [{$data}].",
-                Debugger::INFO,
+            $voidedPurchaseNotificationData = $developerNotification->voidedPurchaseNotification;
+
+            $purchaseTokenRow = $this->purchaseTokensRepository->findByPurchaseToken($voidedPurchaseNotificationData->purchaseToken);
+            if ($purchaseTokenRow === null) {
+                Debugger::log(
+                    "Trying to void purchase with missing purchase token: `{$voidedPurchaseNotificationData->purchaseToken}`",
+                    Debugger::ERROR,
+                );
+
+                return new JsonApiResponse(Response::S400_BadRequest, [
+                    'status' => 'error',
+                    'message' => 'Payload error',
+                    'errors' => [ 'Purchase token not found' ],
+                ]);
+            }
+
+            $this->voidedPurchaseNotificationsRepository->add(
+                $purchaseTokenRow,
+                $voidedPurchaseNotificationData->orderId,
+                $voidedPurchaseNotificationData->productType,
+                $voidedPurchaseNotificationData->refundType ?? null,
+                $eventTime,
             );
-            $response = new JsonApiResponse(Response::S200_OK, [
+
+            return new JsonApiResponse(IResponse::S200_OK, [
                 'status' => 'ok',
                 'result' => 'Developer Notification acknowledged.',
             ]);
-            return $response;
         }
 
         // TODO: what to do with different notifications (oneTimeProductNotification and testNotification)?
@@ -89,12 +107,6 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         if ($developerNotification->subscriptionNotification->version !== "1.0") {
             return $this->logAndReturnPayloadError("Only version 1.0 of SubscriptionNotification is supported.");
         }
-
-        $eventTime = DateTime::createFromFormat(
-            "U.u",
-            sprintf("%.6f", $developerNotification->eventTimeMillis / 1000)
-        );
-        $eventTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
         $purchaseTokenRow = $this->purchaseTokensRepository->add(
             $developerNotification->subscriptionNotification->purchaseToken,
