@@ -86,7 +86,10 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
             GooglePlayBillingModule::META_KEY_ORDER_ID,
             GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID,
         ];
-        $userPayments = $this->paymentsRepository->userPayments($userId);
+        $userPayments = $this->paymentsRepository->userPayments($userId)
+            ->where('payment_gateway.code', GooglePlayBilling::GATEWAY_CODE)
+            ->where(['payments.status' => PaymentsRepository::STATUS_PREPAID]); // failed payments have no metadata
+
         if ($userPayments) {
             foreach ($userPayments as $userPayment) {
                 foreach ($metaKeys as $key => $value) {
@@ -120,7 +123,11 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
     {
         $configRow = $this->configsRepository->loadByName(Config::GOOGLE_BLOCK_ANONYMIZATION);
         if ($configRow && $configRow->value) {
-            $userPayments = $this->paymentsRepository->userPayments($userId)->where('payment_gateway.code', GooglePlayBilling::GATEWAY_CODE);
+            $userPayments = $this->paymentsRepository
+                ->userPayments($userId)
+                ->where('payment_gateway.code', GooglePlayBilling::GATEWAY_CODE)
+                ->where(['payments.status' => PaymentsRepository::STATUS_PREPAID]); // failed payments have no metadata
+
             foreach ($userPayments as $userPayment) {
                 $purchaseToken = $this->paymentMetaRepository->findByPaymentAndKey($userPayment, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN);
                 if (!$purchaseToken) {
