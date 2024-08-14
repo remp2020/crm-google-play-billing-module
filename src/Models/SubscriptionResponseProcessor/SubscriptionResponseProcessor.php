@@ -71,7 +71,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
         }
 
         $user = $this->usersRepository->find($userId);
-        if ($user) {
+        if ($user && $user->active === 1) {
             return $user;
         }
 
