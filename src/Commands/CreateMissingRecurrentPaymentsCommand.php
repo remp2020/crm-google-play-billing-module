@@ -9,6 +9,7 @@ use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
+use Crm\PaymentsModule\Repositories\PaymentMethodsRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
 use Nette\Utils\DateTime;
@@ -21,13 +22,14 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 {
 
     public function __construct(
-        private PaymentsRepository $paymentsRepository,
-        private PaymentGatewaysRepository $paymentGatewaysRepository,
-        private PaymentMetaRepository $paymentMetaRepository,
-        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
-        private ApplicationConfig $applicationConfig,
-        private GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
-        private DeveloperNotificationsRepository $developerNotificationsRepository,
+        private readonly PaymentsRepository $paymentsRepository,
+        private readonly PaymentGatewaysRepository $paymentGatewaysRepository,
+        private readonly PaymentMetaRepository $paymentMetaRepository,
+        private readonly RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private readonly ApplicationConfig $applicationConfig,
+        private readonly GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
+        private readonly DeveloperNotificationsRepository $developerNotificationsRepository,
+        private readonly PaymentMethodsRepository $paymentMethodsRepository,
     ) {
         parent::__construct();
     }
@@ -202,12 +204,18 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 
         $chargeAt = $this->calculateChargeAt($payment);
 
-        $recurrent = $this->recurrentPaymentsRepository->add(
+        $paymentMethod = $this->paymentMethodsRepository->findOrAdd(
+            $payment->user->id,
+            $payment->payment_gateway->id,
             $recurrentToken,
+        );
+
+        $recurrent = $this->recurrentPaymentsRepository->add(
+            $paymentMethod,
             $payment,
             $chargeAt,
             null,
-            --$retries
+            --$retries,
         );
 
         if (isset($googleSubscriptionType->offer_periods) && $googleSubscriptionType->offer_periods === ($usedPeriods + 1)) {
