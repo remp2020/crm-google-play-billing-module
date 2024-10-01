@@ -3,7 +3,6 @@
 namespace Crm\GooglePlayBillingModule\Tests\Hermes;
 
 use Crm\ApplicationModule\Hermes\HermesMessage;
-use Crm\ApplicationModule\Models\Config\ApplicationConfig;
 use Crm\ApplicationModule\Repositories\ConfigCategoriesRepository;
 use Crm\ApplicationModule\Repositories\ConfigsRepository;
 use Crm\ApplicationModule\Seeders\ConfigsSeeder as ApplicationConfigsSeeder;
@@ -55,29 +54,17 @@ class DeveloperNotificationReceivedHandlerTest extends DatabaseTestCase
     private ?ActiveRow $googlePlaySubscriptionTypeStandard = null;
     private ?ActiveRow $user = null;
 
-    private DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler;
-
-    private DeveloperNotificationsRepository $developerNotificationsRepository;
-
-    private GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository;
-
-    private PurchaseTokensRepository $purchaseTokensRepository;
-
-    private PaymentsRepository $paymentsRepository;
-
-    private PaymentMetaRepository $paymentMetaRepository;
-
-    private SubscriptionTypesRepository $subscriptionTypesRepository;
-
-    private SubscriptionTypeBuilder $subscriptionTypeBuilder;
-
-    private SubscriptionsRepository $subscriptionsRepository;
-
-    private UsersRepository $usersRepository;
-
-    private RecurrentPaymentsRepository $recurrentPaymentsRepository;
-
-    private ApplicationConfig $applicationConfig;
+    private readonly DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler;
+    private readonly DeveloperNotificationsRepository $developerNotificationsRepository;
+    private readonly GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository;
+    private readonly PurchaseTokensRepository $purchaseTokensRepository;
+    private readonly PaymentsRepository $paymentsRepository;
+    private readonly PaymentMetaRepository $paymentMetaRepository;
+    private readonly SubscriptionTypesRepository $subscriptionTypesRepository;
+    private readonly SubscriptionTypeBuilder $subscriptionTypeBuilder;
+    private readonly SubscriptionsRepository $subscriptionsRepository;
+    private readonly UsersRepository $usersRepository;
+    private readonly RecurrentPaymentsRepository $recurrentPaymentsRepository;
 
     protected function requiredRepositories(): array
     {
@@ -120,8 +107,6 @@ class DeveloperNotificationReceivedHandlerTest extends DatabaseTestCase
     public function setUp(): void
     {
         parent::setUp();
-
-        $this->applicationConfig = $this->inject(ApplicationConfig::class);
 
         $this->developerNotificationReceivedHandler = $this->inject(DeveloperNotificationReceivedHandler::class);
 
@@ -249,7 +234,7 @@ JSON;
         // recurrent payment checks
         $recurrent = $this->recurrentPaymentsRepository->recurrent($payment);
         $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $recurrent->state);
-        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->cid);
+        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->payment_method->external_token);
 
         // check payment meta against order id and purchase token
         $this->assertEquals(

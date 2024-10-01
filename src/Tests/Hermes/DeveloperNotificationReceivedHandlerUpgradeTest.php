@@ -253,7 +253,7 @@ JSON;
 
         $recurrent = $this->recurrentPaymentsRepository->recurrent($payment);
         $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $recurrent->state);
-        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->cid);
+        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->payment_method->external_token);
 
         // check payment meta against order id and purchase token
         $this->assertEquals(
@@ -391,7 +391,7 @@ JSON;
         // recurrent still active
         $paymentFirstPurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentFirstPurchase);
         $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentFirstPurchaseRecurrent->state);
-        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $paymentFirstPurchaseRecurrent->cid);
+        $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $paymentFirstPurchaseRecurrent->payment_method->external_token);
 
         // check new payment (upgrade) & meta against upgrade purchase
         $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentUpgradePurchase->status);
@@ -411,7 +411,7 @@ JSON;
 
         $paymentUpgradePurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentUpgradePurchase);
         $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentUpgradePurchaseRecurrent->state);
-        $this->assertEquals($purchaseTokenUpgradePurchase->purchase_token, $paymentUpgradePurchaseRecurrent->cid);
+        $this->assertEquals($purchaseTokenUpgradePurchase->purchase_token, $paymentUpgradePurchaseRecurrent->payment_method->external_token);
 
         // check subscriptions type & start/end times against Google play validation responses
         $subscriptionFirstPurchase = $paymentFirstPurchase->subscription;
