@@ -33,8 +33,6 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
 
     private bool $successful = false;
 
-    private $googlePlayValidator;
-
     private $purchaseToken;
 
     public function __construct(
@@ -90,7 +88,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
             throw new \Exception("Missing developer notification with purchase token: [{$cid}].");
         }
 
-        $googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
+        $googlePlayValidator = $this->googlePlayValidatorFactory->create();
 
         try {
             $gSubscription = $googlePlayValidator
@@ -115,7 +113,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         }
 
         $this->purchaseToken = $developerNotification->purchase_token;
-        $googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
+        $googlePlayValidator = $this->googlePlayValidatorFactory->create();
 
         try {
             $gSubscription = $googlePlayValidator
@@ -213,7 +211,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
 
     public function checkValid($token)
     {
-        $googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
+        $googlePlayValidator = $this->googlePlayValidatorFactory->create();
         $developerNotification = $this->developerNotificationsRepository->findBy('purchase_token', $token);
         $this->purchaseToken = $developerNotification->purchase_token;
 
