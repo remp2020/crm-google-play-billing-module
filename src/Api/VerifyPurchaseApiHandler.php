@@ -27,7 +27,7 @@ use Crm\UsersModule\Repositories\UsersRepository;
 use Google\Service\Exception as GoogleServiceException;
 use GuzzleHttp\Exception\GuzzleException;
 use Nette\Database\Table\ActiveRow;
-use Nette\Http\Response;
+use Nette\Http\IResponse;
 use Nette\Utils\Json;
 use Nette\Utils\Random;
 use ReceiptValidator\GooglePlay\Acknowledger;
@@ -46,21 +46,21 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private $googlePlayValidator;
 
     public function __construct(
-        private AccessTokensRepository $accessTokensRepository,
-        private DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler,
-        private GooglePlayValidatorFactory $googlePlayValidatorFactory,
-        private GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
-        private PaymentGatewaysRepository $paymentGatewaysRepository,
-        private PaymentMetaRepository $paymentMetaRepository,
-        private PaymentsRepository $paymentsRepository,
-        private SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
-        private UnclaimedUser $unclaimedUser,
-        private UserMetaRepository $userMetaRepository,
-        private UsersRepository $usersRepository,
-        private DeviceTokensRepository $deviceTokensRepository,
-        private PurchaseTokensRepository $purchaseTokensRepository,
-        private PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository,
-        private RecurrentPaymentsRepository $recurrentPaymentsRepository,
+        private readonly AccessTokensRepository $accessTokensRepository,
+        private readonly DeveloperNotificationReceivedHandler $developerNotificationReceivedHandler,
+        private readonly GooglePlayValidatorFactory $googlePlayValidatorFactory,
+        private readonly GooglePlaySubscriptionTypesRepository $googlePlaySubscriptionTypesRepository,
+        private readonly PaymentGatewaysRepository $paymentGatewaysRepository,
+        private readonly PaymentMetaRepository $paymentMetaRepository,
+        private readonly PaymentsRepository $paymentsRepository,
+        private readonly SubscriptionResponseProcessorInterface $subscriptionResponseProcessor,
+        private readonly UnclaimedUser $unclaimedUser,
+        private readonly UserMetaRepository $userMetaRepository,
+        private readonly UsersRepository $usersRepository,
+        private readonly DeviceTokensRepository $deviceTokensRepository,
+        private readonly PurchaseTokensRepository $purchaseTokensRepository,
+        private readonly PurchaseDeviceTokensRepository $purchaseDeviceTokensRepository,
+        private readonly RecurrentPaymentsRepository $recurrentPaymentsRepository,
     ) {
     }
 
@@ -85,6 +85,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
         // TODO: validate multiple receipts (purchase restore)
         $purchaseSubscription = reset($payload->purchaseSubscriptions);
+
+        $response = $this->validateProduct($purchaseSubscription);
+        if ($response instanceof JsonApiResponse) {
+            return $response;
+        }
 
         $purchaseTokenRow = $this->purchaseTokensRepository->add(
             $purchaseSubscription->purchaseToken,
@@ -120,6 +125,52 @@ class VerifyPurchaseApiHandler extends ApiHandler
         );
     }
 
+    private function validateProduct($purchaseTokenRow)
+    {
+        $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($purchaseTokenRow->productId);
+        if ($googlePlaySubscriptionType) {
+            return true;
+        }
+
+        try {
+            $this->googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
+            $this->googlePlayValidator->setPackageName($purchaseTokenRow->packageName);
+            $this->googlePlayValidator->setPurchaseToken($purchaseTokenRow->purchaseToken);
+            $this->googlePlayValidator->setProductId($purchaseTokenRow->productId);
+            $this->googlePlayValidator->validatePurchase();
+        } catch (\Exception | \Google_Exception $e) {
+            // subscription but we do not have it stored in DB
+            if ($e->getCode() === IResponse::S404_NotFound) {
+                Debugger::log(
+                    "Unable to find SubscriptionType for Google Play product ID [{$purchaseTokenRow->productId}].",
+                    Debugger::ERROR
+                );
+                $response = new JsonApiResponse(IResponse::S500_InternalServerError, [
+                    'status' => 'error',
+                    'code' => 'missing_subscription_type',
+                    'message' => 'Unable to find SubscriptionType for Google Play product ID.',
+                ]);
+                return $response;
+            }
+
+            Debugger::log("Unable to validate Google Play payment. Error: [{$e->getMessage()}]", Debugger::ERROR);
+            $response = new JsonApiResponse(IResponse::S503_ServiceUnavailable, [
+                'status' => 'error',
+                'code' => 'unable_to_validate',
+                'message' => 'Unable to validate Google Play payment.',
+            ]);
+            return $response;
+        }
+
+        // valid product purchase
+        $response = new JsonApiResponse(IResponse::S422_UnprocessableEntity, [
+            'status' => 'error',
+            'code' => 'no_valid',
+            'message' => 'Unable to process',
+        ]);
+        return $response;
+    }
+
     /**
      * @return JsonApiResponse|SubscriptionResponse - Return validated subscription (SubscriptionResponse) or JsonApiResponse which should be returned by API.
      */
@@ -137,7 +188,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         } catch (\Exception | GuzzleException | \Google_Exception $e) {
             Debugger::log("Unable to validate Google Play payment. Error: [{$e->getMessage()}]", Debugger::ERROR);
 
-            $response = new JsonApiResponse(Response::S503_SERVICE_UNAVAILABLE, [
+            $response = new JsonApiResponse(IResponse::S503_ServiceUnavailable, [
                 'status' => 'error',
                 'code' => 'unable_to_validate',
                 'message' => 'Unable to validate Google Play payment.',
@@ -150,7 +201,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
         ], true)) {
-            $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [
+            $response = new JsonApiResponse(IResponse::S400_BadRequest, [
                 'status' => 'error',
                 'code' => 'payment_not_confirmed',
                 'message' => 'Payment is not confirmed by Google yet.',
@@ -174,7 +225,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 $purchaseTokenRow
             );
 
-            $response = new JsonApiResponse(Response::S200_OK, [
+            $response = new JsonApiResponse(IResponse::S200_OK, [
                 'status' => 'ok',
                 'code' => 'success_already_created',
                 'message' => "Google Play purchase verified (transaction was already processed).",
@@ -198,7 +249,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 "Unable to find SubscriptionType for Google Play product ID [{$purchaseTokenRow->subscription_id}].",
                 Debugger::ERROR
             );
-            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, [
+            $response = new JsonApiResponse(IResponse::S500_InternalServerError, [
                 'status' => 'error',
                 'code' => 'missing_subscription_type',
                 'message' => 'Unable to find SubscriptionType for Google Play product ID.',
@@ -215,7 +266,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 "Unable to find PaymentGateway with code [{$paymentGatewayCode}]. Is GooglePlayBillingModule enabled?",
                 Debugger::ERROR
             );
-            $response = new JsonApiResponse(Response::S500_INTERNAL_SERVER_ERROR, [
+            $response = new JsonApiResponse(IResponse::S500_InternalServerError, [
                 'status' => 'error',
                 'code' => 'internal_server_error',
                 'message' => "Unable to find PaymentGateway with code [{$paymentGatewayCode}].",
@@ -248,7 +299,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 $this->acknowledge($purchaseTokenRow);
             }
 
-            $response = new JsonApiResponse(Response::S200_OK, [
+            $response = new JsonApiResponse(IResponse::S200_OK, [
                 'status' => 'ok',
                 'code' => 'success_trial',
                 'message' => "Google Play purchase verified (trial created).",
@@ -302,7 +353,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $this->acknowledge($purchaseTokenRow);
         }
 
-        $response = new JsonApiResponse(Response::S200_OK, [
+        $response = new JsonApiResponse(IResponse::S200_OK, [
             'status' => 'ok',
             'code' => 'success',
             'message' => "Google Play purchase verified.",
@@ -367,7 +418,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
                             $user = $userFromSubscriptionResponse;
                         }
                     } else {
-                        $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [
+                        $response = new JsonApiResponse(IResponse::S400_BadRequest, [
                             'status' => 'error',
                             'code' => 'purchase_already_owned',
                             'message' => "Unable to verify purchase for user [$userFromToken->public_name]. This or previous purchase already owned by other user.",
