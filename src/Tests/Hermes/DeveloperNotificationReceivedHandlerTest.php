@@ -387,6 +387,141 @@ JSON;
         );
     }
 
+
+    /**
+     * Test for scenario
+     * https://gitlab.projektn.sk/remp/helpdesk/-/issues/3246
+     */
+    public function testSubscriptionCancelledWithUnequalStartTimesInNotifications()
+    {
+        $orderId = 'GPA.1111-1111-1111-11111';
+        $purchaseToken = 'purchase_token_' . Random::generate();
+        $startTime = new DateTime('2030-04-27 19:20:57');
+
+        $expiryTime = new DateTime('2030-05-27 19:20:57');
+        $cancellationTime = new DateTime('2020-05-20 19:20:57');
+
+        $this->processPurchaseNotification(
+            orderId: $orderId,
+            purchaseToken: $purchaseToken,
+            startTime: $startTime,
+            expiryTime: $expiryTime,
+        );
+
+        /* ************************************************************ *
+         * CANCEL NOTIFICATION ************************** *
+         * ************************************************************ */
+
+        // purchase token is same as original purchase
+        $purchaseTokenCancelled = $this->purchaseTokensRepository->findByPurchaseToken($purchaseToken);
+        $developerNotificationCancelled = $this->developerNotificationsRepository->add(
+            $purchaseTokenCancelled,
+            new DateTime(),
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED
+        );
+        $hermesMessageCancelled = new HermesMessage(
+            'developer-notification-received',
+            [
+                'developer_notification_id' => $developerNotificationCancelled->getPrimary(),
+            ],
+        );
+
+        $orderIdCancelled = $orderId; // order ID is same as original purchase which should be expired by this change
+        // IMPORTANT: 1 second after original start time
+        $startTimeMillisCancelled = (clone $startTime)->add(new \DateInterval('PT1S'));
+        $expiryTimeMillisCancelled = $expiryTime; // expiry of expiration is same as start of upgraded purchase
+
+        $googleResponseCancelled = <<<JSON
+{
+    "acknowledgementState": 1,
+    "autoRenewing": false,
+    "autoResumeTimeMillis": null,
+    "cancelReason": 0,
+    "countryCode": "SK",
+    "developerPayload": "",
+    "emailAddress": null,
+    "expiryTimeMillis": "{$expiryTimeMillisCancelled->format('Uv')}",
+    "externalAccountId": null,
+    "familyName": null,
+    "givenName": null,
+    "kind": "androidpublisher#subscriptionPurchase",
+    "linkedPurchaseToken": null,
+    "obfuscatedExternalAccountId": "{$this->getUser()->id}",
+    "obfuscatedExternalProfileId": null,
+    "orderId": "{$orderIdCancelled}",
+    "paymentState": 1,
+    "priceAmountMicros": "10",
+    "priceCurrencyCode": "EUR",
+    "profileId": null,
+    "profileName": null,
+    "promotionCode": null,
+    "promotionType": null,
+    "purchaseType": null,
+    "startTimeMillis": "{$startTimeMillisCancelled->format('Uv')}",
+    "userCancellationTimeMillis": "{$cancellationTime->format('Uv')}"
+}
+JSON;
+
+        $this->injectSubscriptionResponseIntoGooglePlayValidatorMock($googleResponseCancelled);
+
+        // handler returns only bool value; check expected log for result (nothing logged)
+        $mockLogger = $this->createMock(ILogger::class);
+        $mockLogger->expects($this->never())
+            ->method('log');
+        Debugger::setLogger($mockLogger);
+
+        $result = $this->developerNotificationReceivedHandler->handle($hermesMessageCancelled);
+        $this->assertTrue($result);
+
+        // developer notification marked as processed
+        $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationCancelled->id);
+        $this->assertEquals(
+            DeveloperNotificationsRepository::STATUS_PROCESSED,
+            $developerNotificationExpiredUpdated->status
+        );
+
+        // number of payments & subscriptions didn't change
+        $this->assertEquals(1, $this->paymentsRepository->totalCount());
+        $this->assertEquals(1, $this->subscriptionsRepository->totalCount());
+        $this->assertEquals(1, $this->recurrentPaymentsRepository->totalCount());
+        // but new payment_meta is present
+        $this->assertEquals(5, $this->paymentMetaRepository->totalCount());
+
+        // just cancelled, no change in payment status
+        $payment = $this->paymentsRepository->getTable()->order('created_at')->fetch();
+        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+
+        // we stopped recurrent
+        $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
+        $this->assertEquals(RecurrentPaymentsRepository::STATE_USER_STOP, $paymentRecurrent->state);
+
+        $subscription = $payment->subscription;
+        $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscription->subscription_type_id);
+        $this->assertEquals($startTime, $payment->subscription_start_at);
+        $this->assertEquals($expiryTime, $payment->subscription_end_at);
+        $this->assertEquals($startTime, $subscription->start_time);
+        // subscription end time didn't change
+        $this->assertEquals($expiryTime, $subscription->end_time);
+        // old payment meta data are same
+        $this->assertEquals(
+            $purchaseTokenCancelled->purchase_token,
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+        );
+        $this->assertEquals(
+            $orderId,
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+        );
+        $this->assertEquals(
+            'cancelled_by_user',
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value
+        );
+        $this->assertEquals(
+            $cancellationTime->format('Y-m-d H:i:s'),
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value
+        );
+    }
+
+
     public function testSubscriptionRevoked()
     {
         $orderId = 'GPA.1111-1111-1111-11111';

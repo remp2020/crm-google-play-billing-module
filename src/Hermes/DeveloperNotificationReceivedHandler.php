@@ -367,22 +367,9 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
      */
     public function cancelSubscription(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification)
     {
-        $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
         $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($subscriptionResponse);
 
-        // check if any payment with same purchase token was created & load data from it
-        $paymentWithPurchaseToken = $this->paymentsRepository->getTable()
-            ->where([
-                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-                ':payment_meta.value' => $developerNotification->purchase_token,
-                'subscription_start_at >= ?' => $subscriptionStartAt->format('Y-m-d H:i:s'),
-            ])
-            ->order('payments.subscription_end_at DESC')
-            ->fetch();
-
-        if (!$paymentWithPurchaseToken) {
-            throw new DoNotRetryException("Unable to find payment with purchase token [{$developerNotification->purchase_token}] and start date [{$subscriptionStartAt->format('Y-m-d H:i:s')}].");
-        }
+        $paymentWithPurchaseToken = $this->loadPaymentFromNotification($subscriptionResponse, $developerNotification);
 
         // store cancel reason
         $cancelReason = $this->processCancelReason($subscriptionResponse, $developerNotification);
@@ -434,25 +421,49 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         );
     }
 
-    public function restartSubscription(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification)
-    {
-        $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
-        $subscriptionEndAt = $this->subscriptionResponseProcessor->getSubscriptionEndAt($subscriptionResponse);
+    private function loadPaymentFromNotification(
+        SubscriptionResponse $subscriptionResponse,
+        ActiveRow $developerNotification
+    ): ActiveRow {
+        // first try order_id, since it is unique for recurrent payments (suffix '..PAYMENT_NUMBER' is added),
+        // unlike purchase_token, which is the same for recurrent payments
 
-        // check if any payment with same purchase token was created & load data from it
-        $paymentWithPurchaseToken = $this->paymentsRepository->getTable()
+        $payment = $this->paymentsRepository->getTable()
             ->where([
-                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-                ':payment_meta.value' => $developerNotification->purchase_token,
-                'subscription_start_at >= ?' => $subscriptionStartAt->format('Y-m-d H:i:s'),
+                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_ORDER_ID,
+                ':payment_meta.value' => $subscriptionResponse->getRawResponse()->getOrderId(),
             ])
             ->order('payments.subscription_end_at DESC')
             ->fetch();
 
-        if (!$paymentWithPurchaseToken) {
-            throw new DoNotRetryException("Unable to find payment with purchase token [{$developerNotification->purchase_token}] and start date [{$subscriptionStartAt->format('Y-m-d H:i:s')}].");
+        if ($payment) {
+            return $payment;
         }
 
+        // fallback to purchase token
+        // sometimes this may fail due to different start of the subscription between different notifications,
+        // see https://gitlab.projektn.sk/remp/helpdesk/-/issues/3246
+
+        $subscriptionStartAt = $this->subscriptionResponseProcessor->getSubscriptionStartAt($subscriptionResponse);
+        // check if any payment with same purchase token was created & load data from it
+        $payment = $this->paymentsRepository->getTable()
+            ->where([
+                ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
+                ':payment_meta.value' => $developerNotification->purchase_token,
+                'subscription_start_at >= ?' => $subscriptionStartAt,
+            ])
+            ->order('payments.subscription_end_at DESC')
+            ->fetch();
+
+        if (!$payment) {
+            throw new DoNotRetryException("Unable to find payment with purchase token [{$developerNotification->purchase_token}] and start date [{$subscriptionStartAt->format('Y-m-d H:i:s')}].");
+        }
+        return $payment;
+    }
+
+    public function restartSubscription(SubscriptionResponse $subscriptionResponse, ActiveRow $developerNotification)
+    {
+        $paymentWithPurchaseToken = $this->loadPaymentFromNotification($subscriptionResponse, $developerNotification);
         $this->paymentMetaRepository->add($paymentWithPurchaseToken, 'restart_datetime', new DateTime(), true);
 
         $restartNote = "Subscription restarted.";
