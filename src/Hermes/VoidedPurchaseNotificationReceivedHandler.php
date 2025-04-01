@@ -4,6 +4,7 @@ namespace Crm\GooglePlayBillingModule\Hermes;
 
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repositories\VoidedPurchaseNotificationsRepository;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -64,8 +65,8 @@ class VoidedPurchaseNotificationReceivedHandler implements HandlerInterface
         }
 
         // set payment status to refund
-        if ($payment->status !== PaymentsRepository::STATUS_REFUND) {
-            $this->paymentsRepository->update($payment, ['status' => PaymentsRepository::STATUS_REFUND]);
+        if ($payment->status !== PaymentStatusEnum::Refund->value) {
+            $this->paymentsRepository->update($payment, ['status' => PaymentStatusEnum::Refund->value]);
         }
 
         return true;

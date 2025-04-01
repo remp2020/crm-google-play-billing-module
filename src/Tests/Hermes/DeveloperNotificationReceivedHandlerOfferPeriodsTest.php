@@ -14,6 +14,7 @@ use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -171,7 +172,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
 
         // payment status & subscription_type checks
         $payment = $this->paymentsRepository->getTable()->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
         $this->assertEquals($googleSubscriptionType->subscription_type_id, $payment->subscription_type_id);
         $this->assertEquals($googleSubscriptionType->subscription_type->price, $payment->amount);
 
@@ -248,7 +249,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $subscriptionTypeAfterOfferPeriods = $this->getSubscriptionTypeAfterOfferPeriods();
 
         // check new payment (second) & meta against second purchase
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentSecondPurchase->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $paymentSecondPurchase->status);
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->id, $paymentSecondPurchase->subscription_type_id);
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->price, $paymentSecondPurchase->amount);
 
@@ -300,7 +301,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $paymentSecondPurchase = next($payments);
 
         // check new payment (second) & meta against second purchase
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentSecondPurchase->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $paymentSecondPurchase->status);
         $this->assertEquals($googleSubscriptionType->subscription_type_id, $paymentSecondPurchase->subscription_type_id);
         $this->assertEquals($googleSubscriptionType->subscription_type->price, $paymentSecondPurchase->amount);
 
@@ -333,7 +334,7 @@ class DeveloperNotificationReceivedHandlerOfferPeriodsTest extends DatabaseTestC
         $subscriptionTypeAfterOfferPeriods = $this->getSubscriptionTypeAfterOfferPeriods();
 
         // check third payment & meta against third purchase
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentThirdPurchase->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $paymentThirdPurchase->status);
         $this->assertEquals($subscriptionTypeAfterOfferPeriods->id, $paymentThirdPurchase->subscription_type_id);
         $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type->price, $paymentThirdPurchase->amount);
 
@@ -425,7 +426,7 @@ JSON;
 
         // payment status & subscription_type checks
         $payment = $this->paymentsRepository->getTable()->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
         $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type_id, $payment->subscription_type_id);
         $this->assertEquals($googleSubscriptionType->subscription_type->next_subscription_type->price, $payment->amount);
 

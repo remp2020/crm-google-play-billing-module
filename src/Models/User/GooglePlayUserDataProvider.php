@@ -9,6 +9,7 @@ use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Models\Config;
 use Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionMetaRepository;
@@ -88,7 +89,7 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
         ];
         $userPayments = $this->paymentsRepository->userPayments($userId)
             ->where('payment_gateway.code', GooglePlayBilling::GATEWAY_CODE)
-            ->where(['payments.status' => PaymentsRepository::STATUS_PREPAID]); // failed payments have no metadata
+            ->where(['payments.status' => PaymentStatusEnum::Prepaid->value]); // failed payments have no metadata
 
         if ($userPayments) {
             foreach ($userPayments as $userPayment) {
@@ -126,7 +127,7 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
             $userPayments = $this->paymentsRepository
                 ->userPayments($userId)
                 ->where('payment_gateway.code', GooglePlayBilling::GATEWAY_CODE)
-                ->where(['payments.status' => PaymentsRepository::STATUS_PREPAID]); // failed payments have no metadata
+                ->where(['payments.status' => PaymentStatusEnum::Prepaid->value]); // failed payments have no metadata
 
             foreach ($userPayments as $userPayment) {
                 $purchaseToken = $this->paymentMetaRepository->findByPaymentAndKey($userPayment, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN);

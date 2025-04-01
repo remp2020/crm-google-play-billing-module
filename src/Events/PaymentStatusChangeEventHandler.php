@@ -4,6 +4,7 @@ namespace Crm\GooglePlayBillingModule\Events;
 
 use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\PaymentsModule\Events\PaymentEventInterface;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\SubscriptionsModule\Repositories\SubscriptionsRepository;
 use League\Event\AbstractListener;
@@ -37,7 +38,7 @@ class PaymentStatusChangeEventHandler extends AbstractListener
             return;
         }
 
-        if ($payment->status !== PaymentsRepository::STATUS_PREPAID) {
+        if ($payment->status !== PaymentStatusEnum::Prepaid->value) {
             return;
         }
 

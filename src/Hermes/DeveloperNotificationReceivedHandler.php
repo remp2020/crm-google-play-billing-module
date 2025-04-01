@@ -8,6 +8,7 @@ use Crm\GooglePlayBillingModule\Models\GooglePlayValidatorFactory;
 use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\SubscriptionResponseProcessorInterface;
 use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Models\RecurrentPaymentsProcessor;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
@@ -335,7 +336,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 ]);
                 $this->recurrentPaymentsProcessor->processChargedRecurrent(
                     $lastRecurrentPayment,
-                    PaymentsRepository::STATUS_PREPAID,
+                    PaymentStatusEnum::Prepaid->value,
                     0,
                     'NOTIFICATION',
                 );
@@ -344,7 +345,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             }
         }
 
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_PREPAID);
+        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Prepaid->value);
 
         $this->recurrentPaymentsRepository->createFromPayment(
             $payment,
@@ -387,7 +388,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         );
         // if subscription is revoked, money are returned and subscription is stopped (in case of cancellation, money are not returned)
         if ($developerNotification->notification_type === DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED) {
-            $this->paymentsRepository->updateStatus($paymentWithPurchaseToken, PaymentsRepository::STATUS_REFUND);
+            $this->paymentsRepository->updateStatus($paymentWithPurchaseToken, PaymentStatusEnum::Refund->value);
         }
 
         // stop active recurrent

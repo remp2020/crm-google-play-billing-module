@@ -13,6 +13,7 @@ use Crm\GooglePlayBillingModule\Repositories\VoidedPurchaseNotificationsReposito
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
@@ -150,7 +151,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         // check payment status
         $payment = $this->paymentsRepository->find($payment->id);
-        $this->assertEquals(PaymentsRepository::STATUS_REFUND, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Refund->value, $payment->status);
 
         // check subscription cancelled
         $subscriptionIsActiveOtInFuture = $this->subscriptionsRepository
@@ -181,7 +182,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         // stop everything; simulates that Google already send REFUND / CANCEL notification
         $recurrentPayment = $this->recurrentPaymentsRepository->stoppedBySystem($recurrentPayment);
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_REFUND);
+        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Refund->value);
         $subscription = $this->subscriptionsRepository->update($payment->subscription, ['end_time' => $payment->subscription->start_time]);
 
         // verify there is no active subscription
@@ -208,7 +209,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         // check payment status
         $payment = $this->paymentsRepository->find($payment->id);
-        $this->assertEquals(PaymentsRepository::STATUS_REFUND, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Refund->value, $payment->status);
 
         // check subscription cancelled
         $subscriptionIsActiveOtInFuture = $this->subscriptionsRepository
@@ -257,7 +258,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
             ],
         );
 
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_PAID);
+        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Paid->value);
 
         $recurrentPayment = $this->recurrentPaymentsRepository->createFromPayment(
             $payment,

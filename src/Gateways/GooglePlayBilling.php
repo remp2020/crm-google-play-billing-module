@@ -10,6 +10,7 @@ use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\PaymentsModule\Models\Gateways\ExternallyChargedRecurrentPaymentInterface;
 use Crm\PaymentsModule\Models\Gateways\GatewayAbstract;
 use Crm\PaymentsModule\Models\Gateways\RecurrentPaymentInterface;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\RecurrentPaymentFailStop;
 use Crm\PaymentsModule\Models\RecurrentPaymentFailTry;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
@@ -78,7 +79,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
 
     public function getChargedPaymentStatus(): string
     {
-        return PaymentsRepository::STATUS_PREPAID;
+        return PaymentStatusEnum::Prepaid->value;
     }
 
     public function getSubscriptionExpiration(string $cid = null): \DateTime

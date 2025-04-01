@@ -12,6 +12,7 @@ use Crm\GooglePlayBillingModule\Models\SubscriptionResponseProcessor\Subscriptio
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\GooglePlayBillingModule\Repositories\PurchaseDeviceTokensRepository;
 use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
@@ -328,7 +329,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $metas
         );
 
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentsRepository::STATUS_PREPAID);
+        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Prepaid->value);
 
         // handle recurrent payment
         // - purchase token be used as recurrent token

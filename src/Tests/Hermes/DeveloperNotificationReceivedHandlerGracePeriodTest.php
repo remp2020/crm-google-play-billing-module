@@ -15,6 +15,7 @@ use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -236,7 +237,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
 
         // payment status & subscription_type checks
         $paymentFirstPurchase = $this->paymentsRepository->getTable()->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentFirstPurchase->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $paymentFirstPurchase->status);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $paymentFirstPurchase->subscription_type_id);
 
         // check payment meta against order id and purchase token
@@ -255,7 +256,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
 
         // check payment, subscription type & start/end times against Google play validation response
         $subscriptionFirstPurchase = $this->subscriptionsRepository->getTable()->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentFirstPurchase->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $paymentFirstPurchase->status);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $paymentFirstPurchase->subscription_type_id);
         $this->assertEquals($startTimeMillisFirstPurchase, $paymentFirstPurchase->subscription_start_at);
         $this->assertEquals($expiryTimeMillisFirstPurchase, $paymentFirstPurchase->subscription_end_at);
@@ -500,7 +501,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
 
         // payment status & subscription_type checks
         $paymentFirstPurchase = $this->paymentsRepository->getTable()->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $paymentFirstPurchase->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $paymentFirstPurchase->status);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $paymentFirstPurchase->subscription_type_id);
         $this->assertEquals($startTimeMillisFirstPurchase, $paymentFirstPurchase->subscription_start_at);
         $this->assertEquals($expiryTimeMillisFirstPurchase, $paymentFirstPurchase->subscription_end_at);

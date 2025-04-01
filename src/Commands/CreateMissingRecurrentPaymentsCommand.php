@@ -7,6 +7,7 @@ use Crm\GooglePlayBillingModule\Gateways\GooglePlayBilling;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentMethodsRepository;
@@ -65,7 +66,7 @@ class CreateMissingRecurrentPaymentsCommand extends Command
         foreach ($purchaseTokens as $purchaseToken) {
             $output->writeln("Processing <info>{$purchaseToken->purchase_token}</info>:");
             $googlePayments = $this->paymentsRepository
-                ->all(payment_gateway: $gateway, status: PaymentsRepository::STATUS_PREPAID)
+                ->all(payment_gateway: $gateway, status: PaymentStatusEnum::Prepaid->value)
                 ->where([
                     ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
                     ':payment_meta.value' => $purchaseToken->purchase_token

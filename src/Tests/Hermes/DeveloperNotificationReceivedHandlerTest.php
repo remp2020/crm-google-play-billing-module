@@ -15,6 +15,7 @@ use Crm\GooglePlayBillingModule\Repositories\PurchaseTokensRepository;
 use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
+use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -228,7 +229,7 @@ JSON;
 
         // payment status & subscription_type checks
         $payment = $this->paymentsRepository->getTable()->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $payment->subscription_type_id);
 
         // recurrent payment checks
@@ -355,7 +356,7 @@ JSON;
 
         // just cancelled, no change in payment status
         $payment = $this->paymentsRepository->getTable()->order('created_at')->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
 
         // we stopped recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
@@ -489,7 +490,7 @@ JSON;
 
         // just cancelled, no change in payment status
         $payment = $this->paymentsRepository->getTable()->order('created_at')->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
 
         // we stopped recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
@@ -617,7 +618,7 @@ JSON;
 
         // payment status changed to refund
         $payment = $this->paymentsRepository->getTable()->order('created_at')->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_REFUND, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Refund->value, $payment->status);
 
         // we stopped recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
@@ -752,7 +753,7 @@ JSON;
 
         // just restarted, no change in payment status
         $payment = $this->paymentsRepository->getTable()->order('created_at')->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
 
         // we restart recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
@@ -893,7 +894,7 @@ JSON;
 
         // just restarted, no change in payment status
         $payment = $this->paymentsRepository->getTable()->order('created_at')->fetch();
-        $this->assertEquals(PaymentsRepository::STATUS_PREPAID, $payment->status);
+        $this->assertEquals(PaymentStatusEnum::Prepaid->value, $payment->status);
 
         // we restart recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
