@@ -5,6 +5,7 @@ namespace Crm\GooglePlayBillingModule\Hermes;
 use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repositories\VoidedPurchaseNotificationsRepository;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -56,7 +57,7 @@ class VoidedPurchaseNotificationReceivedHandler implements HandlerInterface
         if ($recurrentPayment) {
             $lastRecurrentPayment = $this->recurrentPaymentsRepository->getLastWithState(
                 $recurrentPayment,
-                RecurrentPaymentsRepository::STATE_ACTIVE,
+                RecurrentPaymentStateEnum::Active->value,
             );
 
             if ($lastRecurrentPayment && $this->recurrentPaymentsRepository->canBeStopped($lastRecurrentPayment)) {

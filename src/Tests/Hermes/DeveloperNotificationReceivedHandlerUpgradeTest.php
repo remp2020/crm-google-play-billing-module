@@ -17,6 +17,7 @@ use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -253,7 +254,7 @@ JSON;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $payment->subscription_type_id);
 
         $recurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $recurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $recurrent->state);
         $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->payment_method->external_token);
 
         // check payment meta against order id and purchase token
@@ -391,7 +392,7 @@ JSON;
 
         // recurrent still active
         $paymentFirstPurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentFirstPurchase);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentFirstPurchaseRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $paymentFirstPurchaseRecurrent->state);
         $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $paymentFirstPurchaseRecurrent->payment_method->external_token);
 
         // check new payment (upgrade) & meta against upgrade purchase
@@ -411,7 +412,7 @@ JSON;
         );
 
         $paymentUpgradePurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentUpgradePurchase);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentUpgradePurchaseRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $paymentUpgradePurchaseRecurrent->state);
         $this->assertEquals($purchaseTokenUpgradePurchase->purchase_token, $paymentUpgradePurchaseRecurrent->payment_method->external_token);
 
         // check subscriptions type & start/end times against Google play validation responses
@@ -520,7 +521,7 @@ JSON;
 
         // we stopped first recurrent
         $paymentFirstPurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentFirstPurchase);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_USER_STOP, $paymentFirstPurchaseRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::UserStop->value, $paymentFirstPurchaseRecurrent->state);
 
         $subscriptionFirstPurchase = $paymentFirstPurchase->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscriptionFirstPurchase->subscription_type_id);
@@ -560,7 +561,7 @@ JSON;
 
         // didn't touch recurrent either
         $paymentUpgradePurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentUpgradePurchase);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentUpgradePurchaseRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $paymentUpgradePurchaseRecurrent->state);
 
         $subscriptionUpgradePurchase = $paymentUpgradePurchase->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeStandard()->subscription_type_id, $subscriptionUpgradePurchase->subscription_type_id);

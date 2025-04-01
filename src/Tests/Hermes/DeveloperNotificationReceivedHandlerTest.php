@@ -16,6 +16,7 @@ use Crm\GooglePlayBillingModule\Seeders\PaymentGatewaysSeeder;
 use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentItemsRepository;
@@ -234,7 +235,7 @@ JSON;
 
         // recurrent payment checks
         $recurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $recurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $recurrent->state);
         $this->assertEquals($purchaseTokenFirstPurchase->purchase_token, $recurrent->payment_method->external_token);
 
         // check payment meta against order id and purchase token
@@ -360,7 +361,7 @@ JSON;
 
         // we stopped recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_USER_STOP, $paymentRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::UserStop->value, $paymentRecurrent->state);
 
         $subscription = $payment->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscription->subscription_type_id);
@@ -494,7 +495,7 @@ JSON;
 
         // we stopped recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_USER_STOP, $paymentRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::UserStop->value, $paymentRecurrent->state);
 
         $subscription = $payment->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscription->subscription_type_id);
@@ -622,7 +623,7 @@ JSON;
 
         // we stopped recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_USER_STOP, $paymentRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::UserStop->value, $paymentRecurrent->state);
 
         $subscription = $payment->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscription->subscription_type_id);
@@ -757,7 +758,7 @@ JSON;
 
         // we restart recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $paymentRecurrent->state);
 
         $subscription = $payment->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscription->subscription_type_id);
@@ -898,7 +899,7 @@ JSON;
 
         // we restart recurrent
         $paymentRecurrent = $this->recurrentPaymentsRepository->recurrent($payment);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_ACTIVE, $paymentRecurrent->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::Active->value, $paymentRecurrent->state);
 
         $subscription = $payment->subscription;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscription->subscription_type_id);

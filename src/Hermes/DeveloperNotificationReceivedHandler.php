@@ -10,6 +10,7 @@ use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Models\RecurrentPaymentsProcessor;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
@@ -393,8 +394,8 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         // stop active recurrent
         $recurrent = $this->recurrentPaymentsRepository->recurrent($paymentWithPurchaseToken);
-        if ($recurrent && $recurrent->state !== RecurrentPaymentsRepository::STATE_ACTIVE) {
-            $lastRecurrent = $this->recurrentPaymentsRepository->getLastWithState($recurrent, RecurrentPaymentsRepository::STATE_ACTIVE);
+        if ($recurrent && $recurrent->state !== RecurrentPaymentStateEnum::Active->value) {
+            $lastRecurrent = $this->recurrentPaymentsRepository->getLastWithState($recurrent, RecurrentPaymentStateEnum::Active->value);
             if ($lastRecurrent) {
                 $recurrent = $lastRecurrent;
             }
@@ -402,7 +403,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($recurrent) {
             // payment was stopped by user through Google Play store
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'state' => RecurrentPaymentsRepository::STATE_USER_STOP
+                'state' => RecurrentPaymentStateEnum::UserStop->value
             ]);
         } else {
             Debugger::log("Cancelled GooglePlay payment [{$paymentWithPurchaseToken->id}] doesn't have active recurrent payment.", Debugger::WARNING);
@@ -481,7 +482,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($recurrent) {
             // payment was stopped by user through Google Play store
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'state' => RecurrentPaymentsRepository::STATE_ACTIVE
+                'state' => RecurrentPaymentStateEnum::Active->value
             ]);
         } else {
             Debugger::log("Restarted GooglePlay payment [{$paymentWithPurchaseToken->id}] doesn't have stopped recurrent payment. Creating new recurrent.", Debugger::WARNING);

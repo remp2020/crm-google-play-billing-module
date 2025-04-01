@@ -15,6 +15,7 @@ use Crm\PaymentsModule\Events\PaymentChangeStatusEvent;
 use Crm\PaymentsModule\Events\PaymentStatusChangeHandler;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
 use Crm\PaymentsModule\Models\PaymentItem\PaymentItemContainer;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
@@ -160,7 +161,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         // check recurrent payment status
         $recurrentPayment = $this->recurrentPaymentsRepository->find($recurrentPayment->id);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_SYSTEM_STOP, $recurrentPayment->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::SystemStop->value, $recurrentPayment->state);
     }
 
     public function testVoidedPurchaseNotificationSubscriptionAlreadyStoppedHandler()
@@ -218,7 +219,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         // check recurrent payment status
         $recurrentPayment = $this->recurrentPaymentsRepository->find($recurrentPayment->id);
-        $this->assertEquals(RecurrentPaymentsRepository::STATE_SYSTEM_STOP, $recurrentPayment->state);
+        $this->assertEquals(RecurrentPaymentStateEnum::SystemStop->value, $recurrentPayment->state);
     }
 
     private function prepareData(

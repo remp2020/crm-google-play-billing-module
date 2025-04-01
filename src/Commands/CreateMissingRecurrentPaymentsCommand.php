@@ -8,6 +8,7 @@ use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentMethodsRepository;
@@ -164,12 +165,12 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 
     private function userStopRecurrent($recurrentPayment): void
     {
-        if ($recurrentPayment->state === RecurrentPaymentsRepository::STATE_USER_STOP) {
+        if ($recurrentPayment->state === RecurrentPaymentStateEnum::UserStop->value) {
             return;
         }
 
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
-            'state' => RecurrentPaymentsRepository::STATE_USER_STOP,
+            'state' => RecurrentPaymentStateEnum::UserStop->value,
         ]);
     }
 
@@ -177,14 +178,14 @@ class CreateMissingRecurrentPaymentsCommand extends Command
     {
         if (in_array(
             $recurrentPayment->state,
-            [RecurrentPaymentsRepository::STATE_SYSTEM_STOP, RecurrentPaymentsRepository::STATE_CHARGE_FAILED],
+            [RecurrentPaymentStateEnum::SystemStop->value, RecurrentPaymentStateEnum::ChargeFailed->value],
             true
         )) {
             return;
         }
 
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
-            'state' => RecurrentPaymentsRepository::STATE_SYSTEM_STOP,
+            'state' => RecurrentPaymentStateEnum::SystemStop->value,
         ]);
     }
 
@@ -264,13 +265,13 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 
     private function setCharged($recurrentPayment, $payment): void
     {
-        if ($recurrentPayment->state === RecurrentPaymentsRepository::STATE_CHARGED) {
+        if ($recurrentPayment->state === RecurrentPaymentStateEnum::Charged->value) {
             return;
         }
 
         $this->recurrentPaymentsRepository->update($recurrentPayment, [
             'payment_id' => $payment->id,
-            'state' => RecurrentPaymentsRepository::STATE_CHARGED,
+            'state' => RecurrentPaymentStateEnum::Charged->value,
             'status' => 'OK',
             'approval' => 'OK',
         ]);
