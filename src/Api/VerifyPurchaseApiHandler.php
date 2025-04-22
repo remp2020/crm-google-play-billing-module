@@ -329,7 +329,11 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $metas
         );
 
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Prepaid->value);
+        $payment = $this->paymentsRepository->updateStatus(
+            payment: $payment,
+            status: PaymentStatusEnum::Prepaid->value,
+            sendEmail: true,
+        );
 
         // handle recurrent payment
         // - purchase token be used as recurrent token

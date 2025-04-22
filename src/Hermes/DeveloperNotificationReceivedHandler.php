@@ -346,7 +346,11 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             }
         }
 
-        $payment = $this->paymentsRepository->updateStatus($payment, PaymentStatusEnum::Prepaid->value);
+        $payment = $this->paymentsRepository->updateStatus(
+            payment: $payment,
+            status: PaymentStatusEnum::Prepaid->value,
+            sendEmail: true,
+        );
 
         $this->recurrentPaymentsRepository->createFromPayment(
             $payment,
