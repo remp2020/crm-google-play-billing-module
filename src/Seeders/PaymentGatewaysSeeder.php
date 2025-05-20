@@ -28,7 +28,7 @@ class PaymentGatewaysSeeder implements ISeeder
             GooglePlayBilling::GATEWAY_CODE,
             GooglePlayBilling::GATEWAY_NAME,
             false,
-            $sorting++
+            $sorting++,
         );
     }
 
@@ -40,7 +40,7 @@ class PaymentGatewaysSeeder implements ISeeder
                 $gatewayCode,
                 $sorting,
                 true,
-                $recurrent
+                $recurrent,
             );
             $this->output->writeln("  <comment>* payment type <info>{$gatewayCode}</info> created</comment>");
         } else {

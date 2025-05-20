@@ -104,7 +104,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
         $emitter->removeAllListeners(PaymentChangeStatusEvent::class);
         $emitter->addListener(
             PaymentChangeStatusEvent::class,
-            $this->inject(PaymentStatusChangeHandler::class)
+            $this->inject(PaymentStatusChangeHandler::class),
         );
     }
 
@@ -126,7 +126,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         [$payment, $recurrentPayment, $purchaseToken] = $this->prepareData(
             orderId: $orderId,
-            purchaseToken: '786fs3dg87dfg'
+            purchaseToken: '786fs3dg87dfg',
         );
 
         // verify there is active subscription
@@ -173,7 +173,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
 
         [$payment, $recurrentPayment, $purchaseToken] = $this->prepareData(
             orderId: $orderId,
-            purchaseToken: '786fs3dg87dfg'
+            purchaseToken: '786fs3dg87dfg',
         );
 
         // ***** STOP AND VERIFY SUBSCRIPTION BEGIN *****
@@ -234,7 +234,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
         $purchaseTokenPurchase = $this->purchaseTokensRepository->add(
             $purchaseToken,
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionType()->subscription_id
+            $this->getGooglePlaySubscriptionType()->subscription_id,
         );
 
         $user = $this->getUser();
@@ -243,8 +243,8 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
         $paymentItemContainer = (new PaymentItemContainer())
             ->addItems(
                 SubscriptionTypePaymentItem::fromSubscriptionType(
-                    $this->getGooglePlaySubscriptionType()->subscription_type
-                )
+                    $this->getGooglePlaySubscriptionType()->subscription_type,
+                ),
             );
 
         $payment = $this->paymentsRepository->add(
@@ -294,7 +294,7 @@ class VoidedPurchaseNotificationReceivedHandlerTest extends DatabaseTestCase
         if (!$this->googlePlaySubscriptionTypeWeb) {
             $this->googlePlaySubscriptionTypeWeb = $this->googlePlaySubscriptionTypesRepository->add(
                 $googlePlaySubscriptionIdWeb,
-                $subscriptionTypeWeb
+                $subscriptionTypeWeb,
             );
         }
 

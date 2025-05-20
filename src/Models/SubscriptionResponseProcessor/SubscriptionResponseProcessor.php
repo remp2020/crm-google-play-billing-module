@@ -29,7 +29,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
         UnclaimedUser $unclaimedUser,
         UserMetaRepository $userMetaRepository,
         UsersRepository $usersRepository,
-        PaymentMetaRepository $paymentMetaRepository
+        PaymentMetaRepository $paymentMetaRepository,
     ) {
         $this->unclaimedUser = $unclaimedUser;
         $this->userMetaRepository = $userMetaRepository;
@@ -78,7 +78,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
         // find user via existing payment
         $paymentWithPurchaseToken = $this->paymentMetaRepository->findByMeta(
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $developerNotification->purchase_token
+            $developerNotification->purchase_token,
         );
         if ($paymentWithPurchaseToken) {
             return $paymentWithPurchaseToken->payment->user;
@@ -87,7 +87,7 @@ class SubscriptionResponseProcessor implements SubscriptionResponseProcessorInte
         // find user via linked purchase token in user meta
         $usersWithPurchaseToken = $this->userMetaRepository->usersWithKey(
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $developerNotification->purchase_token
+            $developerNotification->purchase_token,
         )->fetchAll();
         if ($usersWithPurchaseToken) {
             if (count($usersWithPurchaseToken) > 1) {

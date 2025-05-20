@@ -18,7 +18,7 @@ class PaymentStatusChangeEventHandler extends AbstractListener
 
     public function __construct(
         SubscriptionsRepository $subscriptionsRepository,
-        PaymentsRepository $paymentsRepository
+        PaymentsRepository $paymentsRepository,
     ) {
         $this->subscriptionsRepository = $subscriptionsRepository;
         $this->paymentsRepository = $paymentsRepository;

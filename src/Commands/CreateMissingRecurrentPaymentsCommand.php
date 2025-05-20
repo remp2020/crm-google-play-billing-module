@@ -43,7 +43,7 @@ class CreateMissingRecurrentPaymentsCommand extends Command
                 'datetime',
                 null,
                 InputOption::VALUE_OPTIONAL,
-                'Set datetime to create recurrent payments with the same created_at datetime. Format is YYYY-MM-DD HH:mm.'
+                'Set datetime to create recurrent payments with the same created_at datetime. Format is YYYY-MM-DD HH:mm.',
             );
     }
 
@@ -70,7 +70,7 @@ class CreateMissingRecurrentPaymentsCommand extends Command
                 ->all(payment_gateway: $gateway, status: PaymentStatusEnum::Prepaid->value)
                 ->where([
                     ':payment_meta.key' => GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-                    ':payment_meta.value' => $purchaseToken->purchase_token
+                    ':payment_meta.value' => $purchaseToken->purchase_token,
                 ])
                 ->order('paid_at ASC');
 
@@ -179,7 +179,7 @@ class CreateMissingRecurrentPaymentsCommand extends Command
         if (in_array(
             $recurrentPayment->state,
             [RecurrentPaymentStateEnum::SystemStop->value, RecurrentPaymentStateEnum::ChargeFailed->value],
-            true
+            true,
         )) {
             return;
         }
@@ -222,17 +222,17 @@ class CreateMissingRecurrentPaymentsCommand extends Command
 
         if (isset($googleSubscriptionType->offer_periods) && $googleSubscriptionType->offer_periods === ($usedPeriods + 1)) {
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'next_subscription_type_id' => $payment->subscription_type->next_subscription_type_id
+                'next_subscription_type_id' => $payment->subscription_type->next_subscription_type_id,
             ]);
         } elseif (!isset($googleSubscriptionType->offer_periods) && isset($payment->subscription_type->next_subscription_type_id)) {
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'next_subscription_type_id' => $payment->subscription_type->next_subscription_type_id
+                'next_subscription_type_id' => $payment->subscription_type->next_subscription_type_id,
             ]);
         }
 
         if (isset($lastRecurrent->next_subscription_type_id)) {
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'subscription_type_id' => $lastRecurrent->next_subscription_type_id
+                'subscription_type_id' => $lastRecurrent->next_subscription_type_id,
             ]);
         }
 

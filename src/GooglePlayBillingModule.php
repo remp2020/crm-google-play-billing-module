@@ -51,16 +51,16 @@ class GooglePlayBillingModule extends CrmModule
             new ApiRoute(
                 new ApiIdentifier('1', 'google-play-billing', 'webhook'),
                 DeveloperNotificationPushWebhookApiHandler::class,
-                NoAuthorization::class
-            )
+                NoAuthorization::class,
+            ),
         );
 
         $apiRoutersContainer->attachRouter(
             new ApiRoute(
                 new ApiIdentifier('1', 'google-play-billing', 'verify-purchase'),
                 VerifyPurchaseApiHandler::class,
-                UserTokenAuthorization::class
-            )
+                UserTokenAuthorization::class,
+            ),
         );
     }
 
@@ -74,12 +74,12 @@ class GooglePlayBillingModule extends CrmModule
     {
         $dispatcher->registerHandler(
             'developer-notification-received',
-            $this->getInstance(DeveloperNotificationReceivedHandler::class)
+            $this->getInstance(DeveloperNotificationReceivedHandler::class),
         );
 
         $dispatcher->registerHandler(
             'voided-purchase-notification-received',
-            $this->getInstance(VoidedPurchaseNotificationReceivedHandler::class)
+            $this->getInstance(VoidedPurchaseNotificationReceivedHandler::class),
         );
     }
 
@@ -94,15 +94,15 @@ class GooglePlayBillingModule extends CrmModule
     {
         $emitter->addListener(
             RemovedAccessTokenEvent::class,
-            RemovedAccessTokenEventHandler::class
+            RemovedAccessTokenEventHandler::class,
         );
         $emitter->addListener(
             PairDeviceAccessTokensEvent::class,
-            PairDeviceAccessTokensEventHandler::class
+            PairDeviceAccessTokensEventHandler::class,
         );
         $emitter->addListener(
             PaymentChangeStatusEvent::class,
-            PaymentStatusChangeEventHandler::class
+            PaymentStatusChangeEventHandler::class,
         );
     }
 
@@ -110,15 +110,15 @@ class GooglePlayBillingModule extends CrmModule
     {
         $dataProviderManager->registerDataProvider(
             'users.dataprovider.access_tokens',
-            $this->getInstance(AccessTokenDataProvider::class)
+            $this->getInstance(AccessTokenDataProvider::class),
         );
         $dataProviderManager->registerDataProvider(
             'payments.dataprovider.payments_filter_form',
-            $this->getInstance(ExternalIdAdminFilterFormDataProvider::class)
+            $this->getInstance(ExternalIdAdminFilterFormDataProvider::class),
         );
         $dataProviderManager->registerDataProvider(
             'admin.dataprovider.universal_search',
-            $this->getInstance(ExternalIdUniversalSearchDataProvider::class)
+            $this->getInstance(ExternalIdUniversalSearchDataProvider::class),
         );
     }
 
@@ -127,12 +127,12 @@ class GooglePlayBillingModule extends CrmModule
         $widgetManager->registerWidget(
             'frontend.payments.listing.recurrent',
             StopRecurrentPaymentButtonWidget::class,
-            100
+            100,
         );
         $widgetManager->registerWidget(
             'payments.user_payments.listing.recurrent',
             StopRecurrentPaymentButtonWidget::class,
-            100
+            100,
         );
     }
 

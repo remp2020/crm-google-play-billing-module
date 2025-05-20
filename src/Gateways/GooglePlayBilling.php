@@ -99,7 +99,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
                 ->validateSubscription();
         } catch (\Exception  $e) {
             throw new \Exception(
-                "Unable to validate Google Play notification [" . $developerNotification . "] loaded from purchase token [" . $cid . "]. Error: [{$e->getMessage()}]"
+                "Unable to validate Google Play notification [" . $developerNotification . "] loaded from purchase token [" . $cid . "]. Error: [{$e->getMessage()}]",
             );
         }
 
@@ -125,7 +125,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         } catch (\Exception  $e) {
             Debugger::log(
                 "Unable to validate Google Play notification [" . $developerNotification . "] loaded from purchase token [" . $token . "]. Error: [{$e->getMessage()}]",
-                Debugger::INFO
+                Debugger::INFO,
             );
             throw new RecurrentPaymentFailTry("Unable to validate google play subscription for purchase token: " . $token);
         }
@@ -137,7 +137,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         // validate google subscription payment state
         if (!in_array($gSubscription->getPaymentState(), [
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
-            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
+            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL,
         ], true)) {
             throw new RecurrentPaymentFailTry('Payment is not confirmed by Google yet.');
         }
@@ -165,7 +165,7 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         $subscriptionEndAtZeroMillis = (clone $subscriptionEndAt)->setTime(
             $subscriptionEndAt->format('H'),
             $subscriptionEndAt->format('i'),
-            $subscriptionEndAt->format('s')
+            $subscriptionEndAt->format('s'),
         );
         if ($subscriptionEndAtZeroMillis <= $subscriptionEndDate || $subscriptionEndAtZeroMillis < new \DateTime()) {
             throw new RecurrentPaymentFailTry();
@@ -180,27 +180,27 @@ class GooglePlayBilling extends GatewayAbstract implements RecurrentPaymentInter
         $this->paymentMetaRepository->add(
             $payment,
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $developerNotification->purchase_token
+            $developerNotification->purchase_token,
         );
         $this->paymentMetaRepository->add(
             $payment,
             GooglePlayBillingModule::META_KEY_ORDER_ID,
-            $gSubscription->getRawResponse()->getOrderId()
+            $gSubscription->getRawResponse()->getOrderId(),
         );
         $this->paymentMetaRepository->add(
             $payment,
             GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID,
-            $developerNotification->id
+            $developerNotification->id,
         );
 
         // check if grace period subscription exists
         $subscription = $this->subscriptionMetaRepository->findSubscriptionBy(
             GooglePlayBillingModule::META_KEY_ORDER_ID,
-            $gSubscription->getRawResponse()->getOrderId()
+            $gSubscription->getRawResponse()->getOrderId(),
         );
         if ($subscription && $subscription->end_time > new \DateTime()) {
             $this->subscriptionsRepository->update($subscription, [
-                'end_time' => new \DateTime()
+                'end_time' => new \DateTime(),
             ]);
         }
 

@@ -14,7 +14,7 @@ class ExternalIdUniversalSearchDataProvider implements UniversalSearchDataProvid
         private PaymentsRepository $paymentsRepository,
         private LinkGenerator $linkGenerator,
         private Translator $translator,
-        private UserDateHelper $userDateHelper
+        private UserDateHelper $userDateHelper,
     ) {
     }
 
@@ -43,7 +43,7 @@ class ExternalIdUniversalSearchDataProvider implements UniversalSearchDataProvid
             $result[$groupName][] = [
                 'id' => 'payment_' . $payment->id,
                 'text' => $text,
-                'url' => $this->linkGenerator->link('Users:UsersAdmin:show', ['id' => $payment->user_id])
+                'url' => $this->linkGenerator->link('Users:UsersAdmin:show', ['id' => $payment->user_id]),
             ];
         }
 

@@ -139,7 +139,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $emitter->removeAllListeners(PaymentChangeStatusEvent::class);
         $emitter->addListener(
             PaymentChangeStatusEvent::class,
-            $this->inject(PaymentStatusChangeHandler::class)
+            $this->inject(PaymentStatusChangeHandler::class),
         );
     }
 
@@ -160,12 +160,12 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationFirstPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -226,7 +226,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationFirstPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationFirstPurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationFirstPurchaseUpdated->status
+            $developerNotificationFirstPurchaseUpdated->status,
         );
 
         // payment, payment_meta and subscription created
@@ -243,15 +243,15 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // check payment meta against order id and purchase token
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value,
         );
 
         // check payment, subscription type & start/end times against Google play validation response
@@ -348,7 +348,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationGracePeriodUpdated = $this->developerNotificationsRepository->find($developerNotificationGracePeriod->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationGracePeriodUpdated->status
+            $developerNotificationGracePeriodUpdated->status,
         );
 
         // NO new payment and NO payment_meta
@@ -380,15 +380,15 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // check meta
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, 'google_play_billing_order_id')->value,
         );
 
         // check new subscription (grace period) & meta
@@ -398,18 +398,18 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals($expiryTimeMillisGracePeriod, $subscriptionGracePeriod->end_time);
         $this->assertEquals(
             $purchaseTokenGracePeriod->purchase_token,
-            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_purchase_token')->value
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationGracePeriod->id,
-            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_developer_notification_id')->value
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdGracePeriod,
-            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_order_id')->value
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_order_id')->value,
         );
         $this->assertTrue(
-            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_grace_period_subscription')->value
+            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, 'google_play_billing_grace_period_subscription')->value,
         );
     }
 
@@ -421,12 +421,12 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationFirstPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -490,7 +490,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationFirstPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationFirstPurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationFirstPurchaseUpdated->status
+            $developerNotificationFirstPurchaseUpdated->status,
         );
 
         // payment, payment_meta and subscription created
@@ -509,15 +509,15 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // check payment meta against order id and purchase token
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN)->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN)->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID)->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID)->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, GooglePlayBillingModule::META_KEY_ORDER_ID)->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, GooglePlayBillingModule::META_KEY_ORDER_ID)->value,
         );
 
         // check payment, subscription type & start/end times against Google play validation response
@@ -610,7 +610,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationGracePeriodUpdated = $this->developerNotificationsRepository->find($developerNotificationGracePeriod->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationGracePeriodUpdated->status
+            $developerNotificationGracePeriodUpdated->status,
         );
 
         // NO new payment and NO payment_meta
@@ -630,7 +630,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // grace subscription ends in the same time as end time provided in notification, we store only seconds in DB
         $this->assertEquals(
             $expiryTimeMillisGracePeriod,
-            $subscriptionGracePeriod->end_time
+            $subscriptionGracePeriod->end_time,
         );
 
         $paymentFirstPurchaseReload = $this->paymentsRepository->getTable()->fetch();
@@ -643,15 +643,15 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // check meta
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN)->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN)->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID)->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID)->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, GooglePlayBillingModule::META_KEY_ORDER_ID)->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchaseReload, GooglePlayBillingModule::META_KEY_ORDER_ID)->value,
         );
 
         // check new subscription (grace period) & meta
@@ -659,18 +659,18 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $subscriptionGracePeriod->subscription_type_id);
         $this->assertEquals(
             $purchaseTokenGracePeriod->purchase_token,
-            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN)->value
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN)->value,
         );
         $this->assertEquals(
             $developerNotificationGracePeriod->id,
-            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID)->value
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_DEVELOPER_NOTIFICATION_ID)->value,
         );
         $this->assertEquals(
             $orderIdGracePeriod,
-            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_ORDER_ID)->value
+            $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_ORDER_ID)->value,
         );
         $this->assertTrue(
-            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_GRACE_PERIOD_SUBSCRIPTION)->value
+            (bool) $this->subscriptionMetaRepository->findBySubscriptionAndKey($subscriptionGracePeriod, GooglePlayBillingModule::META_KEY_GRACE_PERIOD_SUBSCRIPTION)->value,
         );
     }
 
@@ -682,12 +682,12 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationFirstPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -751,7 +751,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationFirstPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationFirstPurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationFirstPurchaseUpdated->status
+            $developerNotificationFirstPurchaseUpdated->status,
         );
 
         // payment, payment_meta and subscription created
@@ -847,7 +847,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationGracePeriodUpdated = $this->developerNotificationsRepository->find($developerNotificationGracePeriod->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationGracePeriodUpdated->status
+            $developerNotificationGracePeriodUpdated->status,
         );
 
         // NO new payment and NO payment_meta
@@ -867,12 +867,12 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // grace subscription ends in the same time as end time provided in notification, we store only seconds in DB
         $this->assertEquals(
             $expiryTimeMillisGracePeriod,
-            $graceSubscription->end_time
+            $graceSubscription->end_time,
         );
 
         // mock we are already some time in grace period
         $this->subscriptionsRepository->update($graceSubscription, [
-            'start_time' => new DateTime('-30 minutes')
+            'start_time' => new DateTime('-30 minutes'),
         ]);
 
         /* ***************************************************************** *
@@ -882,7 +882,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationSecondPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenSecondPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageSecondPurchase = new HermesMessage(
             'developer-notification-received',
@@ -947,7 +947,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationSecondPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationSecondPurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationSecondPurchaseUpdated->status
+            $developerNotificationSecondPurchaseUpdated->status,
         );
 
         // payment, payment_meta and subscription created
@@ -973,7 +973,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         // second subscription ends in the same time as end time provided in notification, we store only seconds in DB
         $this->assertEquals(
             $expiryTimeMillisSecondPurchase,
-            $secondSubscription->end_time
+            $secondSubscription->end_time,
         );
 
         // subscription purchased in grace period -> active grace period subscription updated end time to NOW
@@ -993,12 +993,12 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationFirstPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -1056,7 +1056,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $developerNotificationRenewed = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RENEWED,
         );
         $hermesMessageRenewed = new HermesMessage(
             'developer-notification-received',
@@ -1187,7 +1187,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
                 "Unable to create grace period subscription. " .
                 "DeveloperNotification ID: [{$developerNotificationGracePeriod->id}]. Error: [" .
                 "There is already subscription ID [{$subscriptionRenewed->id}] with later end time " .
-                "linked through purchase token [{$developerNotificationGracePeriod->purchase_token}].]"
+                "linked through purchase token [{$developerNotificationGracePeriod->purchase_token}].]",
             );
         Debugger::setLogger($mockLogger);
 
@@ -1216,7 +1216,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $purchaseTokenGracePeriod = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationGracePeriod = $this->developerNotificationsRepository->add(
             $purchaseTokenGracePeriod,
@@ -1282,7 +1282,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
                 "Unable to create grace period subscription. " .
                 "DeveloperNotification ID: [{$developerNotificationGracePeriod->id}]. Error: [" .
                 "Cannot grant grace period without previous purchase. " .
-                "Unable to find payment with purchase token [{$developerNotificationGracePeriod->purchase_token}].]"
+                "Unable to find payment with purchase token [{$developerNotificationGracePeriod->purchase_token}].]",
             );
         Debugger::setLogger($mockLogger);
 
@@ -1306,7 +1306,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         $googlePlayValidatorMocked = Mockery::mock(Validator::class);
         $googlePlayValidatorMocked->shouldReceive('setPackageName->setPurchaseToken->setProductId->validateSubscription')
             ->andReturn(new SubscriptionResponse(new SubscriptionPurchase(
-                Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY)
+                Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY),
             )))
             ->getMock();
         $this->developerNotificationReceivedHandler->setGooglePlayValidator($googlePlayValidatorMocked);
@@ -1351,7 +1351,7 @@ class DeveloperNotificationReceivedHandlerGracePeriodTest extends DatabaseTestCa
         if (!$this->googlePlaySubscriptionTypeWeb) {
             $this->googlePlaySubscriptionTypeWeb = $this->googlePlaySubscriptionTypesRepository->add(
                 $googlePlaySubscriptionIdWeb,
-                $subscriptionTypeWeb
+                $subscriptionTypeWeb,
             );
         }
 

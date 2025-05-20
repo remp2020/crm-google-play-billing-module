@@ -91,7 +91,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                             $googlePlayValidator->getPublisherService(),
                             $developerNotification->package_name,
                             $developerNotification->subscription_id,
-                            $developerNotification->purchase_token
+                            $developerNotification->purchase_token,
                         );
                         $googleAcknowledger->acknowledge();
                     }
@@ -99,7 +99,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                     Debugger::log("Processing stopped, no further attempts. Reason: [{$e->getMessage()}]", self::INFO_LOG_LEVEL);
                     $this->developerNotificationsRepository->updateStatus(
                         $developerNotification,
-                        DeveloperNotificationsRepository::STATUS_DO_NOT_RETRY
+                        DeveloperNotificationsRepository::STATUS_DO_NOT_RETRY,
                     );
                     return false;
                 }
@@ -115,7 +115,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                     Debugger::log("Unable to cancel subscription. DeveloperNotification ID: [{$developerNotification->id}]. Error: [{$e->getMessage()}]", Debugger::ERROR);
                     $this->developerNotificationsRepository->updateStatus(
                         $developerNotification,
-                        DeveloperNotificationsRepository::STATUS_ERROR
+                        DeveloperNotificationsRepository::STATUS_ERROR,
                     );
                     return false;
                 }
@@ -142,7 +142,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                     Debugger::log("Unable to create grace period subscription. DeveloperNotification ID: [{$developerNotification->id}]. Error: [{$e->getMessage()}]", Debugger::ERROR);
                     $this->developerNotificationsRepository->updateStatus(
                         $developerNotification,
-                        DeveloperNotificationsRepository::STATUS_ERROR
+                        DeveloperNotificationsRepository::STATUS_ERROR,
                     );
                     return false;
                 }
@@ -152,18 +152,18 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
                 // new notification type? log it
                 Debugger::log(
                     "Unable to handle DeveloperNotification, received new notification type: [{$developerNotification->notification_type}]",
-                    Debugger::ERROR
+                    Debugger::ERROR,
                 );
                 $this->developerNotificationsRepository->updateStatus(
                     $developerNotification,
-                    DeveloperNotificationsRepository::STATUS_ERROR
+                    DeveloperNotificationsRepository::STATUS_ERROR,
                 );
                 return false;
         }
 
         $this->developerNotificationsRepository->updateStatus(
             $developerNotification,
-            DeveloperNotificationsRepository::STATUS_PROCESSED
+            DeveloperNotificationsRepository::STATUS_PROCESSED,
         );
         return true;
     }
@@ -199,7 +199,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
     {
         $paymentOrder = $this->paymentMetaRepository->findByMeta(
             GooglePlayBillingModule::META_KEY_ORDER_ID,
-            $subscriptionResponse->getRawResponse()->getOrderId()
+            $subscriptionResponse->getRawResponse()->getOrderId(),
         );
         if ($paymentOrder) {
             return $paymentOrder->payment;
@@ -207,7 +207,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         $subscription = $this->subscriptionMetaRepository->findSubscriptionBy(
             GooglePlayBillingModule::META_KEY_ORDER_ID,
-            $subscriptionResponse->getRawResponse()->getOrderId()
+            $subscriptionResponse->getRawResponse()->getOrderId(),
         );
 
         if ($subscription?->type === SubscriptionsRepository::TYPE_FREE) {
@@ -219,7 +219,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($subscription) {
             $isGraceSubscription = $this->subscriptionMetaRepository->findBySubscriptionAndKey(
                 $subscription,
-                GooglePlayBillingModule::META_KEY_GRACE_PERIOD_SUBSCRIPTION
+                GooglePlayBillingModule::META_KEY_GRACE_PERIOD_SUBSCRIPTION,
             );
 
             if (!$isGraceSubscription) {
@@ -232,7 +232,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
 
         if (!in_array($subscriptionResponse->getPaymentState(), [
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
-            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
+            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL,
         ], true)) {
             throw new DoNotRetryException("Unable to handle PaymentState [{$subscriptionResponse->getPaymentState()}], no payment created.");
         }
@@ -272,7 +272,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($paymentWithPurchaseToken && isset($paymentWithPurchaseToken->subscription_end_at)) {
             $paymentWithPurchaseTokenOrderId = $this->paymentMetaRepository->findByPaymentAndKey(
                 $paymentWithPurchaseToken,
-                GooglePlayBillingModule::META_KEY_ORDER_ID
+                GooglePlayBillingModule::META_KEY_ORDER_ID,
             );
             $samePurchaseTokenAndOrderId = false;
             if ($paymentWithPurchaseTokenOrderId !== null && $paymentWithPurchaseTokenOrderId->value === $subscriptionResponse->getRawResponse()->getOrderId()) {
@@ -326,7 +326,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             null,
             null,
             $recurrentCharge,
-            $metas
+            $metas,
         );
 
         if ($paymentWithPurchaseToken) {
@@ -389,7 +389,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $paymentWithPurchaseToken,
             [
                 'note' => $paymentNote . $cancelNote,
-            ]
+            ],
         );
         // if subscription is revoked, money are returned and subscription is stopped (in case of cancellation, money are not returned)
         if ($developerNotification->notification_type === DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED) {
@@ -407,7 +407,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($recurrent) {
             // payment was stopped by user through Google Play store
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'state' => RecurrentPaymentStateEnum::UserStop->value
+                'state' => RecurrentPaymentStateEnum::UserStop->value,
             ]);
         } else {
             Debugger::log("Cancelled GooglePlay payment [{$paymentWithPurchaseToken->id}] doesn't have active recurrent payment.", Debugger::WARNING);
@@ -423,13 +423,13 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             [
                 'note' => $subscriptionNote . $cancelNote,
                 'end_time' => $subscriptionEndAt, // update end date of subscription with information from google
-            ]
+            ],
         );
     }
 
     private function loadPaymentFromNotification(
         SubscriptionResponse $subscriptionResponse,
-        ActiveRow $developerNotification
+        ActiveRow $developerNotification,
     ): ActiveRow {
         // first try order_id, since it is unique for recurrent payments (suffix '..PAYMENT_NUMBER' is added),
         // unlike purchase_token, which is the same for recurrent payments
@@ -478,7 +478,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             $paymentWithPurchaseToken,
             [
                 'note' => $paymentNote . $restartNote,
-            ]
+            ],
         );
 
         // restart recurrent
@@ -486,7 +486,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($recurrent) {
             // payment was stopped by user through Google Play store
             $this->recurrentPaymentsRepository->update($recurrent, [
-                'state' => RecurrentPaymentStateEnum::Active->value
+                'state' => RecurrentPaymentStateEnum::Active->value,
             ]);
         } else {
             Debugger::log("Restarted GooglePlay payment [{$paymentWithPurchaseToken->id}] doesn't have stopped recurrent payment. Creating new recurrent.", Debugger::WARNING);
@@ -503,7 +503,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         ActiveRow $subscriptionType,
         DateTime $startDateTime,
         DateTime $endDateTime,
-        array $metas
+        array $metas,
     ): ActiveRow {
         $subscription = $this->subscriptionsRepository->add(
             $subscriptionType,
@@ -516,7 +516,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             'GooglePlay Free Trial',
             null,
             true,
-            null
+            null,
         );
 
         foreach ($metas as $metaKey => $metaData) {
@@ -587,7 +587,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($paymentWithPurchaseToken === null || !isset($paymentWithPurchaseToken->subscription)) {
             throw new DoNotRetryException(
                 "Cannot grant grace period without previous purchase. " .
-                "Unable to find payment with purchase token [{$developerNotification->purchase_token}]."
+                "Unable to find payment with purchase token [{$developerNotification->purchase_token}].",
             );
         }
 
@@ -601,7 +601,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
         if ($lastSubscription->end_time >= $subscriptionEndAt) {
             throw new DoNotRetryException(
                 "There is already subscription ID [{$lastSubscription->id}] with later end time " .
-                "linked through purchase token [{$developerNotification->purchase_token}]."
+                "linked through purchase token [{$developerNotification->purchase_token}].",
             );
         }
 
@@ -616,7 +616,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             SubscriptionsRepository::TYPE_PREPAID,
             $subscriptionStartAt,
             $subscriptionEndAt,
-            'GooglePlay Grace Period'
+            'GooglePlay Grace Period',
         );
 
         foreach ($metas as $metaKey => $metaData) {
@@ -630,7 +630,7 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
     {
         if ($subscription->end_time > new DateTime()) {
             $this->subscriptionsRepository->update($subscription, [
-                'end_time' => new DateTime()
+                'end_time' => new DateTime(),
             ]);
         }
     }

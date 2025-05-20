@@ -12,7 +12,7 @@ class PairDeviceAccessTokensEventHandler extends AbstractListener
     private $unclaimedUser;
 
     public function __construct(
-        UnclaimedUser $unclaimedUser
+        UnclaimedUser $unclaimedUser,
     ) {
         $this->unclaimedUser = $unclaimedUser;
     }

@@ -24,7 +24,7 @@ class DeveloperNotificationsRepository extends Repository
     const STATUSES = [
         self::STATUS_NEW,
         self::STATUS_PROCESSED,
-        self::STATUS_ERROR
+        self::STATUS_ERROR,
     ];
 
     const NOTIFICATION_TYPE_SUBSCRIPTION_RECOVERED = 1;
@@ -54,13 +54,13 @@ class DeveloperNotificationsRepository extends Repository
         self::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSED,
         self::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED,
         self::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED,
-        self::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED
+        self::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED,
     ];
 
     public function __construct(
         Explorer $database,
         AuditLogRepository $auditLogRepository,
-        Emitter $hermesEmitter
+        Emitter $hermesEmitter,
     ) {
         parent::__construct($database);
 
@@ -75,7 +75,7 @@ class DeveloperNotificationsRepository extends Repository
         ActiveRow $purchaseToken,
         DateTime $eventTime,
         int $notificationType,
-        string $status = self::STATUS_NEW
+        string $status = self::STATUS_NEW,
     ) {
         if (!in_array($notificationType, self::NOTIFICATION_TYPES, true)) {
             throw new \Exception("Incorrect notification type provided. Got [{$notificationType}].");
@@ -101,7 +101,7 @@ class DeveloperNotificationsRepository extends Repository
                 ],
                 null,
                 null,
-                DateTime::from('+15 seconds')->getTimestamp() // give verify purchase API some headroom
+                DateTime::from('+15 seconds')->getTimestamp(), // give verify purchase API some headroom
             ), HermesMessage::PRIORITY_HIGH);
         }
 

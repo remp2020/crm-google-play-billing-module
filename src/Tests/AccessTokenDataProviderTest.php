@@ -50,7 +50,7 @@ class AccessTokenDataProviderTest extends DatabaseTestCase
         $dataProviderManager = $this->inject(DataProviderManager::class);
         $dataProviderManager->registerDataProvider(
             'users.dataprovider.access_tokens',
-            $this->inject(AccessTokenDataProvider::class)
+            $this->inject(AccessTokenDataProvider::class),
         );
     }
 
@@ -72,7 +72,7 @@ class AccessTokenDataProviderTest extends DatabaseTestCase
         // regular unpairing should get rid of all access tokens linked to the device
         $this->assertCount(
             0,
-            $this->accessTokensRepository->findAllByDeviceToken($deviceToken)
+            $this->accessTokensRepository->findAllByDeviceToken($deviceToken),
         );
     }
 
@@ -94,7 +94,7 @@ class AccessTokenDataProviderTest extends DatabaseTestCase
         // unpairing should get rid of the one access token without Google source
         $this->assertCount(
             1,
-            $this->accessTokensRepository->findAllByDeviceToken($deviceToken)
+            $this->accessTokensRepository->findAllByDeviceToken($deviceToken),
         );
     }
 

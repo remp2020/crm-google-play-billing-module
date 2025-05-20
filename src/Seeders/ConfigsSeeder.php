@@ -28,7 +28,7 @@ class ConfigsSeeder implements ISeeder
     public function __construct(
         ConfigCategoriesRepository $configCategoriesRepository,
         ConfigsRepository $configsRepository,
-        ConfigBuilder $configBuilder
+        ConfigBuilder $configBuilder,
     ) {
         $this->configCategoriesRepository = $configCategoriesRepository;
         $this->configsRepository = $configsRepository;
@@ -52,7 +52,7 @@ class ConfigsSeeder implements ISeeder
             'google_play_billing.config.service_account.display_name',
             'google_play_billing.config.service_account.description',
             '',
-            $sorting++
+            $sorting++,
         );
 
         $category = $this->getCategory($output, 'subscriptions.config.users.category', 'fa fa-user', 300);
@@ -65,7 +65,7 @@ class ConfigsSeeder implements ISeeder
             'google_play_billing.config.users.prevent_anonymization.name',
             'google_play_billing.config.users.prevent_anonymization.description',
             true,
-            201
+            201,
         );
     }
 
@@ -94,7 +94,7 @@ class ConfigsSeeder implements ISeeder
 
             if ($config->category->name != $category->name) {
                 $this->configsRepository->update($config, [
-                    'config_category_id' => $category->id
+                    'config_category_id' => $category->id,
                 ]);
                 $this->output->writeln("  <comment>* config item <info>$name</info> updated</comment>");
             }

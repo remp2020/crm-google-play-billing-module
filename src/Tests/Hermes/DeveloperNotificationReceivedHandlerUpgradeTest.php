@@ -153,7 +153,7 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         $emitter->removeAllListeners(PaymentChangeStatusEvent::class);
         $emitter->addListener(
             PaymentChangeStatusEvent::class,
-            $this->inject(PaymentStatusChangeHandler::class)
+            $this->inject(PaymentStatusChangeHandler::class),
         );
     }
 
@@ -174,12 +174,12 @@ class DeveloperNotificationReceivedHandlerUpgradeTest extends DatabaseTestCase
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationFirstPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -239,7 +239,7 @@ JSON;
         $developerNotificationFirstPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationFirstPurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationFirstPurchaseUpdated->status
+            $developerNotificationFirstPurchaseUpdated->status,
         );
 
         // payment, payment_meta and subscription created
@@ -260,15 +260,15 @@ JSON;
         // check payment meta against order id and purchase token
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
 
         // check subscription type & start/end times against Google play validation response
@@ -289,12 +289,12 @@ JSON;
         $purchaseTokenUpgradePurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeStandard()->subscription_id // upgraded subscription
+            $this->getGooglePlaySubscriptionTypeStandard()->subscription_id, // upgraded subscription
         );
         $developerNotificationUpgradePurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenUpgradePurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageUpgradePurchase = new HermesMessage(
             'developer-notification-received',
@@ -361,7 +361,7 @@ JSON;
         $developerNotificationUpgradePurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationUpgradePurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationUpgradePurchaseUpdated->status
+            $developerNotificationUpgradePurchaseUpdated->status,
         );
 
         // new payment, subscription & payment_meta
@@ -379,15 +379,15 @@ JSON;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeWeb()->subscription_type_id, $paymentFirstPurchase->subscription_type_id);
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value,
         );
 
         // recurrent still active
@@ -400,15 +400,15 @@ JSON;
         $this->assertEquals($this->getGooglePlaySubscriptionTypeStandard()->subscription_type_id, $paymentUpgradePurchase->subscription_type_id);
         $this->assertEquals(
             $purchaseTokenUpgradePurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationUpgradePurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdUpgradePurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentUpgradePurchase, 'google_play_billing_order_id')->value,
         );
 
         $paymentUpgradePurchaseRecurrent = $this->recurrentPaymentsRepository->recurrent($paymentUpgradePurchase);
@@ -440,7 +440,7 @@ JSON;
         $developerNotificationExpired = $this->developerNotificationsRepository->add(
             $purchaseTokenExpired,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_EXPIRED,
         );
         $hermesMessageExpired = new HermesMessage(
             'developer-notification-received',
@@ -502,7 +502,7 @@ JSON;
         $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationExpired->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationExpiredUpdated->status
+            $developerNotificationExpiredUpdated->status,
         );
 
         // number of payments & subscriptions didn't change
@@ -536,24 +536,24 @@ JSON;
         // old payment meta data are same
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'google_play_billing_order_id')->value,
         );
         // there is one new meta data
         $this->assertEquals(
             'replaced_by_new_subscription',
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'cancel_reason')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'cancel_reason')->value,
         );
         // but cancel datetime (usually sent with cancel_reason) is not set for expiration notification after upgrade
         $this->assertNull(
-            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'cancel_datetime')
+            $this->paymentMetaRepository->findByPaymentAndKey($paymentFirstPurchase, 'cancel_datetime'),
         );
 
         // but we didn't touch second (upgrade purchase)
@@ -581,7 +581,7 @@ JSON;
         $googlePlayValidatorMocked = Mockery::mock(Validator::class);
         $googlePlayValidatorMocked->shouldReceive('setPackageName->setPurchaseToken->setProductId->validateSubscription')
             ->andReturn(new SubscriptionResponse(new SubscriptionPurchase(
-                Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY)
+                Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY),
             )))
             ->getMock();
         $this->developerNotificationReceivedHandler->setGooglePlayValidator($googlePlayValidatorMocked);
@@ -625,7 +625,7 @@ JSON;
         if (!$this->googlePlaySubscriptionTypeWeb) {
             $this->googlePlaySubscriptionTypeWeb = $this->googlePlaySubscriptionTypesRepository->add(
                 $googlePlaySubscriptionIdWeb,
-                $subscriptionTypeWeb
+                $subscriptionTypeWeb,
             );
         }
 
@@ -656,7 +656,7 @@ JSON;
         if (!$this->googlePlaySubscriptionTypeStandard) {
             $this->googlePlaySubscriptionTypeStandard = $this->googlePlaySubscriptionTypesRepository->add(
                 $googlePlaySubscriptionIdStandard,
-                $subscriptionTypeStandard
+                $subscriptionTypeStandard,
             );
         }
         return $this->googlePlaySubscriptionTypeStandard;

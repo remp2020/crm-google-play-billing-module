@@ -99,7 +99,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         $this->lazyEventEmitter = $this->inject(LazyEventEmitter::class);
         $this->lazyEventEmitter->addListener(
             RemovedAccessTokenEvent::class,
-            $this->inject(RemovedAccessTokenEventHandler::class)
+            $this->inject(RemovedAccessTokenEventHandler::class),
         );
     }
 
@@ -142,7 +142,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         $this->paymentMetaRepository->add(
             $payment,
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $purchaseToken
+            $purchaseToken,
         );
 
         // logout and verify:
@@ -180,7 +180,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
         $this->paymentMetaRepository->add(
             $payment,
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $purchaseToken
+            $purchaseToken,
         );
 
         // logout and verify:
@@ -210,7 +210,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
             $this->paymentMetaRepository->add(
                 $payment,
                 GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-                $purchaseToken
+                $purchaseToken,
             );
         }
 
@@ -231,7 +231,7 @@ class RemovedAccessTokenEventHandlerTest extends DatabaseTestCase
             $this->getSubscriptionType(),
             $this->getPaymentGateway(),
             $user,
-            $paymentItemContainer
+            $paymentItemContainer,
         );
         return $payment;
     }

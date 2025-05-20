@@ -18,7 +18,7 @@ class RevalidateDeveloperNotificationCommand extends Command
 
     public function __construct(
         DeveloperNotificationsRepository $developerNotificationsRepository,
-        Emitter $hermesEmitter
+        Emitter $hermesEmitter,
     ) {
         parent::__construct();
         $this->developerNotificationsRepository = $developerNotificationsRepository;
@@ -32,7 +32,7 @@ class RevalidateDeveloperNotificationCommand extends Command
                 'id',
                 null,
                 InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY,
-                "ID of Developer Notification to revalidate."
+                "ID of Developer Notification to revalidate.",
             )
             ->setHelp(<<<EOH
 This command triggers revalidation of developer notification against Google Billing. Use this command in case that
@@ -44,8 +44,7 @@ is missing, a revalidation process should create it.
 Note: Command doesn't process developer notification immediately.
       Status of developer notification provided with <comment>`--id={id}`</comment> is set to <comment>`new`<comment>
       and hermes message <comment>`developer-notification-received`</comment> with this developer notification is emitted.
-EOH
-            )
+EOH,)
             ->addUsage('--id=12345678')
             ->setDescription('Revalidate developer notification');
     }

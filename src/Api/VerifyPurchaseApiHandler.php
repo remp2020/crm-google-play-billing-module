@@ -95,14 +95,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $purchaseTokenRow = $this->purchaseTokensRepository->add(
             $purchaseSubscription->purchaseToken,
             $purchaseSubscription->packageName,
-            $purchaseSubscription->productId
+            $purchaseSubscription->productId,
         );
 
         // verify receipt in Google system
         $subscriptionOrResponse =  $this->verifyGooglePlayBillingPurchaseSubscription(
             $authorization,
             $purchaseSubscription,
-            $purchaseTokenRow
+            $purchaseTokenRow,
         );
         if ($subscriptionOrResponse instanceof JsonApiResponse) {
             return $subscriptionOrResponse;
@@ -122,7 +122,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $user,
             $subscriptionResponse,
             $purchaseTokenRow,
-            $payload->articleId ?? null
+            $payload->articleId ?? null,
         );
     }
 
@@ -144,7 +144,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             if ($e->getCode() === IResponse::S404_NotFound) {
                 Debugger::log(
                     "Unable to find SubscriptionType for Google Play product ID [{$purchaseTokenRow->productId}].",
-                    Debugger::ERROR
+                    Debugger::ERROR,
                 );
                 $response = new JsonApiResponse(IResponse::S500_InternalServerError, [
                     'status' => 'error',
@@ -178,7 +178,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
     private function verifyGooglePlayBillingPurchaseSubscription(
         UserTokenAuthorization $authorization,
         $purchaseSubscription,
-        ActiveRow $purchaseTokenRow
+        ActiveRow $purchaseTokenRow,
     ) {
         try {
             $this->googlePlayValidator = $this->googlePlayValidator ?: $this->googlePlayValidatorFactory->create();
@@ -200,7 +200,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         // validate google subscription payment state
         if (!in_array($gSubscription->getPaymentState(), [
             GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_CONFIRMED,
-            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL
+            GooglePlayValidatorFactory::SUBSCRIPTION_PAYMENT_STATE_FREE_TRIAL,
         ], true)) {
             $response = new JsonApiResponse(IResponse::S400_BadRequest, [
                 'status' => 'error',
@@ -213,7 +213,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         // check if payment with this purchase token already exists
         $paymentWithPurchaseToken = $this->paymentMetaRepository->findByMeta(
             GooglePlayBillingModule::META_KEY_PURCHASE_TOKEN,
-            $purchaseTokenRow->purchase_token
+            $purchaseTokenRow->purchase_token,
         );
         if ($paymentWithPurchaseToken) {
             // payment is created internally; we can confirm it in Google
@@ -223,7 +223,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $this->pairUserWithAuthorizedToken(
                 $authorization,
                 $paymentWithPurchaseToken->payment->user,
-                $purchaseTokenRow
+                $purchaseTokenRow,
             );
 
             $response = new JsonApiResponse(IResponse::S200_OK, [
@@ -241,14 +241,14 @@ class VerifyPurchaseApiHandler extends ApiHandler
         ActiveRow $user,
         SubscriptionResponse $subscriptionResponse,
         ActiveRow $purchaseTokenRow,
-        ?string $articleID
+        ?string $articleID,
     ): JsonApiResponse {
         // validate subscription type
         $googlePlaySubscriptionType = $this->googlePlaySubscriptionTypesRepository->findByGooglePlaySubscriptionId($purchaseTokenRow->subscription_id);
         if (!$googlePlaySubscriptionType) {
             Debugger::log(
                 "Unable to find SubscriptionType for Google Play product ID [{$purchaseTokenRow->subscription_id}].",
-                Debugger::ERROR
+                Debugger::ERROR,
             );
             $response = new JsonApiResponse(IResponse::S500_InternalServerError, [
                 'status' => 'error',
@@ -265,7 +265,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         if (!$paymentGateway) {
             Debugger::log(
                 "Unable to find PaymentGateway with code [{$paymentGatewayCode}]. Is GooglePlayBillingModule enabled?",
-                Debugger::ERROR
+                Debugger::ERROR,
             );
             $response = new JsonApiResponse(IResponse::S500_InternalServerError, [
                 'status' => 'error',
@@ -292,7 +292,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
                 $subscriptionType,
                 $subscriptionStartAt,
                 $subscriptionEndAt,
-                $metas
+                $metas,
             );
 
             // payment is created internally; we can confirm it in Google
@@ -326,7 +326,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             null,
             null,
             false,
-            $metas
+            $metas,
         );
 
         $payment = $this->paymentsRepository->updateStatus(
@@ -350,7 +350,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         $this->recurrentPaymentsRepository->createFromPayment(
             $payment,
             $purchaseTokenRow->purchase_token,
-            $subscriptionEndAt
+            $subscriptionEndAt,
         );
 
         // payment is created internally; we can confirm it in Google
@@ -373,7 +373,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
         UserTokenAuthorization $authorization,
         SubscriptionResponse $subscriptionResponse,
         ActiveRow $purchaseTokenRow,
-        string $locale = null
+        string $locale = null,
     ) {
         $user = null;
 
@@ -442,7 +442,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $user = $this->unclaimedUser->createUnclaimedUser(
                 "google_play_billing_{$rand}",
                 GooglePlayBillingModule::USER_SOURCE_APP,
-                $locale
+                $locale,
             );
         }
 
@@ -502,7 +502,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
             $this->googlePlayValidator->getPublisherService(),
             $purchaseTokenRow->package_name,
             $purchaseTokenRow->subscription_id,
-            $purchaseTokenRow->purchase_token
+            $purchaseTokenRow->purchase_token,
         );
 
         try {
@@ -553,7 +553,7 @@ class VerifyPurchaseApiHandler extends ApiHandler
 
             $this->purchaseDeviceTokensRepository->add(
                 $purchaseTokenRow,
-                $deviceToken
+                $deviceToken,
             );
         } else {
             // TODO: shouldn't we throw an exception here? or return special error to the app?

@@ -60,7 +60,7 @@ class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
         $this->lazyEventEmitter = $this->inject(LazyEventEmitter::class);
         $this->lazyEventEmitter->addListener(
             PairDeviceAccessTokensEvent::class,
-            $this->inject(PairDeviceAccessTokensEventHandler::class)
+            $this->inject(PairDeviceAccessTokensEventHandler::class),
         );
     }
 
@@ -100,11 +100,11 @@ class PairDeviceAccessTokensEventHandlerTest extends DatabaseTestCase
         // pairing regular user should trigger claim of linked unclaimed user
         $this->assertEquals(
             $user->id,
-            $this->unclaimedUser->getClaimer($unclaimedUser)->id ?? null
+            $this->unclaimedUser->getClaimer($unclaimedUser)->id ?? null,
         );
         $this->assertEquals(
             $unclaimedUser->id,
-            $this->unclaimedUser->getPreviouslyClaimedUser($user)->id ?? null
+            $this->unclaimedUser->getPreviouslyClaimedUser($user)->id ?? null,
         );
     }
 

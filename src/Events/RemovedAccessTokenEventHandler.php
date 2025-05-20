@@ -25,7 +25,7 @@ class RemovedAccessTokenEventHandler extends AbstractListener
         PaymentMetaRepository $paymentMetaRepository,
         DeviceTokensRepository $deviceTokensRepository,
         AccessTokensRepository $accessTokensRepository,
-        UsersRepository $usersRepository
+        UsersRepository $usersRepository,
     ) {
         $this->paymentMetaRepository = $paymentMetaRepository;
         $this->deviceTokensRepository = $deviceTokensRepository;
@@ -78,7 +78,7 @@ class RemovedAccessTokenEventHandler extends AbstractListener
                 $accessToken = $this->accessTokensRepository->add(
                     $user,
                     3,
-                    $event->getSource() ?? GooglePlayBillingModule::USER_SOURCE_APP
+                    $event->getSource() ?? GooglePlayBillingModule::USER_SOURCE_APP,
                 );
                 $this->accessTokensRepository->pairWithDeviceToken($accessToken, $deviceToken);
             }

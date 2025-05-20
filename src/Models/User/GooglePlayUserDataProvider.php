@@ -48,7 +48,7 @@ class GooglePlayUserDataProvider implements UserDataProviderInterface
         SubscriptionsRepository $subscriptionsRepository,
         SubscriptionMetaRepository $subscriptionMetaRepository,
         PurchaseTokensRepository $purchaseTokensRepository,
-        Translator $translator
+        Translator $translator,
     ) {
         $this->translator = $translator;
         $this->googlePlayValidatorFactory = $googlePlayValidatorFactory;

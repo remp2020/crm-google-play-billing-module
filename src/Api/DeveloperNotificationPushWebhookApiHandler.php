@@ -53,7 +53,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             return $this->logAndReturnPayloadError(sprintf(
                 "Unable to parse JSON of Google's DeveloperNotification: %s. %s",
                 $errorPayload['message'],
-                isset($errorPayload['errors']) ? ". Errors: [" . print_r($errorPayload['errors'], true) . '].' : ''
+                isset($errorPayload['errors']) ? ". Errors: [" . print_r($errorPayload['errors'], true) . '].' : '',
             ));
         }
         $developerNotification = $result->getParsedObject();
@@ -64,7 +64,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
 
         $eventTime = DateTime::createFromFormat(
             "U.u",
-            sprintf("%.6f", $developerNotification->eventTimeMillis / 1000)
+            sprintf("%.6f", $developerNotification->eventTimeMillis / 1000),
         );
         $eventTime->setTimezone(new \DateTimeZone(date_default_timezone_get()));
 
@@ -111,7 +111,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         $purchaseTokenRow = $this->purchaseTokensRepository->add(
             $developerNotification->subscriptionNotification->purchaseToken,
             $developerNotification->packageName,
-            $developerNotification->subscriptionNotification->subscriptionId
+            $developerNotification->subscriptionNotification->subscriptionId,
         );
 
         // exception from mysql will stop execution; message won't be acknowledged; no need to send internal mysql exception to google
@@ -119,7 +119,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
             $purchaseTokenRow,
             $eventTime,
             $developerNotification->subscriptionNotification->notificationType,
-            DeveloperNotificationsRepository::STATUS_NEW
+            DeveloperNotificationsRepository::STATUS_NEW,
         );
 
         $response = new JsonApiResponse(Response::S200_OK, [
@@ -134,7 +134,7 @@ class DeveloperNotificationPushWebhookApiHandler extends ApiHandler
         // log as error; google probably changed payload
         Debugger::log(
             "Google Play Pub/Sub pushing Developer Notification with different payload. Error: [{$errorMessage}].",
-            Debugger::ERROR
+            Debugger::ERROR,
         );
 
         $response = new JsonApiResponse(Response::S400_BAD_REQUEST, [

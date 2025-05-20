@@ -133,7 +133,7 @@ class DeveloperNotificationReceivedHandlerTest extends DatabaseTestCase
         $emitter->removeAllListeners(PaymentChangeStatusEvent::class);
         $emitter->addListener(
             PaymentChangeStatusEvent::class,
-            $this->inject(PaymentStatusChangeHandler::class)
+            $this->inject(PaymentStatusChangeHandler::class),
         );
     }
 
@@ -154,12 +154,12 @@ class DeveloperNotificationReceivedHandlerTest extends DatabaseTestCase
         $purchaseTokenFirstPurchase = $this->purchaseTokensRepository->add(
             'purchase_token_' . Random::generate(),
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationFirstPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenFirstPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -219,7 +219,7 @@ JSON;
         $developerNotificationFirstPurchaseUpdated = $this->developerNotificationsRepository->find($developerNotificationFirstPurchase->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationFirstPurchaseUpdated->status
+            $developerNotificationFirstPurchaseUpdated->status,
         );
 
         // payment, payment_meta, recurrent payment and subscription created
@@ -241,15 +241,15 @@ JSON;
         // check payment meta against order id and purchase token
         $this->assertEquals(
             $purchaseTokenFirstPurchase->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $developerNotificationFirstPurchase->id,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_developer_notification_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_developer_notification_id')->value,
         );
         $this->assertEquals(
             $orderIdFirstPurchase,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
 
         // check subscription type & start/end times against Google play validation response
@@ -286,7 +286,7 @@ JSON;
         $developerNotificationCancelled = $this->developerNotificationsRepository->add(
             $purchaseTokenCancelled,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED,
         );
         $hermesMessageCancelled = new HermesMessage(
             'developer-notification-received',
@@ -345,7 +345,7 @@ JSON;
         $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationCancelled->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationExpiredUpdated->status
+            $developerNotificationExpiredUpdated->status,
         );
 
         // number of payments & subscriptions didn't change
@@ -373,19 +373,19 @@ JSON;
         // old payment meta data are same
         $this->assertEquals(
             $purchaseTokenCancelled->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $orderId,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
         $this->assertEquals(
             'cancelled_by_user',
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value,
         );
         $this->assertEquals(
             $cancellationTime->format('Y-m-d H:i:s'),
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value,
         );
     }
 
@@ -419,7 +419,7 @@ JSON;
         $developerNotificationCancelled = $this->developerNotificationsRepository->add(
             $purchaseTokenCancelled,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED,
         );
         $hermesMessageCancelled = new HermesMessage(
             'developer-notification-received',
@@ -479,7 +479,7 @@ JSON;
         $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationCancelled->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationExpiredUpdated->status
+            $developerNotificationExpiredUpdated->status,
         );
 
         // number of payments & subscriptions didn't change
@@ -507,19 +507,19 @@ JSON;
         // old payment meta data are same
         $this->assertEquals(
             $purchaseTokenCancelled->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $orderId,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
         $this->assertEquals(
             'cancelled_by_user',
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value,
         );
         $this->assertEquals(
             $cancellationTime->format('Y-m-d H:i:s'),
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value,
         );
     }
 
@@ -548,7 +548,7 @@ JSON;
         $developerNotificationCancelled = $this->developerNotificationsRepository->add(
             $purchaseTokenCancelled,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_REVOKED,
         );
         $hermesMessageCancelled = new HermesMessage(
             'developer-notification-received',
@@ -607,7 +607,7 @@ JSON;
         $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationCancelled->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationExpiredUpdated->status
+            $developerNotificationExpiredUpdated->status,
         );
 
         // number of payments & subscriptions didn't change
@@ -635,19 +635,19 @@ JSON;
         // old payment meta data are same
         $this->assertEquals(
             $purchaseTokenCancelled->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $orderId,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
         $this->assertEquals(
             'cancelled_by_user',
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value,
         );
         $this->assertEquals(
             $cancellationTime->format('Y-m-d H:i:s'),
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value,
         );
     }
 
@@ -683,7 +683,7 @@ JSON;
         $developerNotificationCancelled = $this->developerNotificationsRepository->add(
             $purchaseTokenCancelled,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED,
         );
         $hermesMessageCancelled = new HermesMessage(
             'developer-notification-received',
@@ -742,7 +742,7 @@ JSON;
         $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationCancelled->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationExpiredUpdated->status
+            $developerNotificationExpiredUpdated->status,
         );
 
         // number of payments & subscriptions didn't change
@@ -770,22 +770,22 @@ JSON;
         // old payment meta data are same
         $this->assertEquals(
             $purchaseTokenCancelled->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $orderId,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
         $this->assertEquals(
             'cancelled_by_user',
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value,
         );
         $this->assertEquals(
             $cancellationTime->format('Y-m-d H:i:s'),
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value,
         );
         $this->assertNotNull(
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'restart_datetime')
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'restart_datetime'),
         );
     }
 
@@ -826,7 +826,7 @@ JSON;
         $developerNotificationCancelled = $this->developerNotificationsRepository->add(
             $purchaseTokenCancelled,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_RESTARTED,
         );
         $hermesMessageCancelled = new HermesMessage(
             'developer-notification-received',
@@ -883,7 +883,7 @@ JSON;
         $developerNotificationExpiredUpdated = $this->developerNotificationsRepository->find($developerNotificationCancelled->id);
         $this->assertEquals(
             DeveloperNotificationsRepository::STATUS_PROCESSED,
-            $developerNotificationExpiredUpdated->status
+            $developerNotificationExpiredUpdated->status,
         );
 
         // number of payments & subscriptions didn't change
@@ -911,22 +911,22 @@ JSON;
         // old payment meta data are same
         $this->assertEquals(
             $purchaseTokenCancelled->purchase_token,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_purchase_token')->value,
         );
         $this->assertEquals(
             $orderId,
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'google_play_billing_order_id')->value,
         );
         $this->assertEquals(
             'cancelled_by_user',
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_reason')->value,
         );
         $this->assertEquals(
             $cancellationTime->format('Y-m-d H:i:s'),
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'cancel_datetime')->value,
         );
         $this->assertNotNull(
-            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'restart_datetime')
+            $this->paymentMetaRepository->findByPaymentAndKey($payment, 'restart_datetime'),
         );
     }
 
@@ -946,12 +946,12 @@ JSON;
         $purchaseTokenPurchase = $this->purchaseTokensRepository->add(
             $purchaseToken,
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PURCHASED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -1011,12 +1011,12 @@ JSON;
         $purchaseTokenPurchase = $this->purchaseTokensRepository->add(
             $purchaseToken,
             $this->googlePlayPackage,
-            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id
+            $this->getGooglePlaySubscriptionTypeWeb()->subscription_id,
         );
         $developerNotificationPurchase = $this->developerNotificationsRepository->add(
             $purchaseTokenPurchase,
             new DateTime(),
-            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED
+            DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_CANCELED,
         );
         $hermesMessageFirstPurchase = new HermesMessage(
             'developer-notification-received',
@@ -1069,7 +1069,7 @@ JSON;
         $googlePlayValidatorMocked = Mockery::mock(Validator::class);
         $googlePlayValidatorMocked->shouldReceive('setPackageName->setPurchaseToken->setProductId->validateSubscription')
             ->andReturn(new SubscriptionResponse(new SubscriptionPurchase(
-                Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY)
+                Json::decode($expectedGoogleValidatorSubscriptionResponse, Json::FORCE_ARRAY),
             )))
             ->getMock();
         $this->developerNotificationReceivedHandler->setGooglePlayValidator($googlePlayValidatorMocked);
@@ -1113,7 +1113,7 @@ JSON;
         if (!$this->googlePlaySubscriptionTypeWeb) {
             $this->googlePlaySubscriptionTypeWeb = $this->googlePlaySubscriptionTypesRepository->add(
                 $googlePlaySubscriptionIdWeb,
-                $subscriptionTypeWeb
+                $subscriptionTypeWeb,
             );
         }
 
@@ -1144,7 +1144,7 @@ JSON;
         if (!$this->googlePlaySubscriptionTypeStandard) {
             $this->googlePlaySubscriptionTypeStandard = $this->googlePlaySubscriptionTypesRepository->add(
                 $googlePlaySubscriptionIdStandard,
-                $subscriptionTypeStandard
+                $subscriptionTypeStandard,
             );
         }
         return $this->googlePlaySubscriptionTypeStandard;
