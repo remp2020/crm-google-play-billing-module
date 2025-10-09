@@ -133,6 +133,9 @@ class DeveloperNotificationReceivedHandler implements HandlerInterface
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_DEFERRED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSED:
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_PAUSE_SCHEDULE_CHANGED:
+            case DeveloperNotificationsRepository::SUBSCRIPTION_PRICE_CHANGE_UPDATED:
+            case DeveloperNotificationsRepository::SUBSCRIPTION_PENDING_PURCHASE_CANCELED:
+            case DeveloperNotificationsRepository::SUBSCRIPTION_PRICE_STEP_UP_CONSENT_UPDATED:
                 break;
 
             case DeveloperNotificationsRepository::NOTIFICATION_TYPE_SUBSCRIPTION_IN_GRACE_PERIOD:
