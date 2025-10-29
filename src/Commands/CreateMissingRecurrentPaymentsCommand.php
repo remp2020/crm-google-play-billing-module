@@ -8,12 +8,14 @@ use Crm\GooglePlayBillingModule\GooglePlayBillingModule;
 use Crm\GooglePlayBillingModule\Repositories\DeveloperNotificationsRepository;
 use Crm\GooglePlayBillingModule\Repositories\GooglePlaySubscriptionTypesRepository;
 use Crm\PaymentsModule\Models\Payment\PaymentStatusEnum;
+use Crm\PaymentsModule\Models\RecurrentPayment\ChainData;
 use Crm\PaymentsModule\Models\RecurrentPayment\RecurrentPaymentStateEnum;
 use Crm\PaymentsModule\Repositories\PaymentGatewaysRepository;
 use Crm\PaymentsModule\Repositories\PaymentMetaRepository;
 use Crm\PaymentsModule\Repositories\PaymentMethodsRepository;
 use Crm\PaymentsModule\Repositories\PaymentsRepository;
 use Crm\PaymentsModule\Repositories\RecurrentPaymentsRepository;
+use DateInterval;
 use Nette\Utils\DateTime;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -212,12 +214,16 @@ class CreateMissingRecurrentPaymentsCommand extends Command
             $recurrentToken,
         );
 
+        $chainData = ChainData::fromParentPayment($this->recurrentPaymentsRepository->recurrent($payment));
+
         $recurrent = $this->recurrentPaymentsRepository->add(
-            $paymentMethod,
-            $payment,
-            $chargeAt,
-            null,
-            --$retries,
+            paymentMethod: $paymentMethod,
+            payment: $payment,
+            chargeAt: $chargeAt,
+            customAmount: null,
+            retries: --$retries,
+            chainId: $chainData->chainId,
+            cycle: $chainData->cycle,
         );
 
         if (isset($googleSubscriptionType->offer_periods) && $googleSubscriptionType->offer_periods === ($usedPeriods + 1)) {
@@ -245,7 +251,7 @@ class CreateMissingRecurrentPaymentsCommand extends Command
         $subscriptionType = $payment->subscription_type;
 
         if (!$subscription) {
-            $endTime = (clone $payment->paid_at)->add(new \DateInterval("P{$payment->subscription_type->length}D"));
+            $endTime = (clone $payment->paid_at)->add(new DateInterval("P{$payment->subscription_type->length}D"));
         } else {
             $endTime = clone $subscription->end_time;
         }
@@ -254,9 +260,9 @@ class CreateMissingRecurrentPaymentsCommand extends Command
         if ($chargeBefore) {
             if ($chargeBefore < 0) {
                 $chargeBefore = abs($chargeBefore);
-                $endTime->add(new \DateInterval("PT{$chargeBefore}H"));
+                $endTime->add(new DateInterval("PT{$chargeBefore}H"));
             } else {
-                $endTime->sub(new \DateInterval("PT{$chargeBefore}H"));
+                $endTime->sub(new DateInterval("PT{$chargeBefore}H"));
             }
         }
 
